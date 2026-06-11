@@ -85,7 +85,7 @@ const LEVELS = [
       '.....t...............t......',
       '..H#####----------#####H....',
       '..H....................H...H',
-      '..H...t....s...s....t..H...H',
+      '..H...t....s........t..H...H',
       '..H#####H##########H###H#..H',
       '........H..t....t..H.......H',
       '........H#########.H.......H',
@@ -240,19 +240,22 @@ const TREAT = [[
   '.oo....oo.',
 ]];
 
-// The family: three kids on the couch. Two girls + a boy; two with light
-// brown hair (L), one girl (the 9-year-old) with dark brown hair (D). 28 x 16.
+// The family: three kids on the couch.
+//   left  = oldest (12), girl, light brown hair (L), shoulder length
+//   middle= 9-year-old, girl, dark brown hair (D), below the shoulders
+//   right = boy (6), dark brown hair (D), short  -  smallest, sits lowest
+// 28 x 16.
 const FAMILY = [[
   '............................',
-  '...........DDDDDD...........',
-  '...LLLLL..DDDDDDDD..LLLLL...',
-  '...LsssL..DssssssD..sLLLs...',
-  '...LkskL..DskskssD..sksks...',
-  '...LsssL..DssssssD..sssss...',
-  '...LshsL..DsshhssD..sshss...',
-  '...LmmmL..DyyyyyyD..bbbbb...',
-  'vv.mmmmm..DyyyyyyD..bbbbb.vv',
-  'vv.mmmmm..yyyyyyyy..bbbbb.vv',
+  '...LLLLL....................',
+  '..LLLLLLL..DDDDDD...........',
+  '..LsssssL.DDDDDDDD..........',
+  '..LkssksL.DssssssD..DDDDDD..',
+  '..LsshssL.DskskssD..DssssD..',
+  '..LsssssL.DsshhssD..skssks..',
+  '..LLsssLL.DDssssDD..sshhss..',
+  '..LmmmmmL.DyyyyyyD..bbbbbb..',
+  '..mmmmmmm.DyyyyyyD..bbbbbb..',
   'vvvvvvvvvvvvvvvvvvvvvvvvvvvv',
   'vvvvvvvvvnvvvvvvvvnvvvvvvvvv',
   'vvvvvvvvvnvvvvvvvvnvvvvvvvvv',
