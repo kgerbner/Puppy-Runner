@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v2.0';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v2.1';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -1042,8 +1042,10 @@ function drawHUD() {
   }
   const haveNuts = penny && penny.nuts > 0;
   cx.drawImage(SPR.sqrlL[0], 470, 14, 24, 19);
-  if (near < SQRL_WARN && Math.floor(frame / 8) % 2) {
-    chunkyText('!! SQUIRREL !!', 588, 16, 11, '#ff4fa3');
+  if (near < SQRL_WARN) {
+    // steady text, gentle 1s colour pulse — urgent but not strobing
+    const hot = Math.floor(frame / 30) % 2;
+    chunkyText('!! SQUIRREL !!', 588, 16, 11, hot ? '#ff4fa3' : '#ff8fb2');
     chunkyText(haveNuts ? 'SPACE: GIVE A NUT!' : 'RUN, OR TRAP IT!', 588, 35, 9, '#ffe14d');
   } else {
     chunkyText('AVOID SQUIRRELS', 588, 16, 10, '#ff8fb2');
