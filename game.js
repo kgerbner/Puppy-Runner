@@ -1048,22 +1048,24 @@ function drawTitle() {
   rainbowText('RUNNER', W / 2, 178, 64);
   chunkyText('* A VERY GOOD DOG ADVENTURE *', W / 2, 220, 14, '#21d3ee');
 
-  // warm spotlight so a black dog reads against the dark title backdrop
-  const glow = cx.createRadialGradient(W / 2, 256, 4, W / 2, 256, 42);
+  // warm spotlight so a black dog reads against the dark title backdrop;
+  // penny sits centered in the gap between the subtitle and the controls text
+  const py = 270;
+  const glow = cx.createRadialGradient(W / 2, py, 4, W / 2, py, 42);
   glow.addColorStop(0, 'rgba(255,238,210,0.95)');
   glow.addColorStop(1, 'rgba(255,238,210,0)');
   cx.fillStyle = glow;
-  cx.beginPath(); cx.arc(W / 2, 256, 42, 0, 7); cx.fill();
-  cx.drawImage(SPR.sit, W / 2 - SPR.sit.width / 2, 238 + Math.sin(stateT * 3) * 3);
-  drawHeart(W / 2 + 30, 246 + Math.sin(stateT * 3) * 3, 6);
+  cx.beginPath(); cx.arc(W / 2, py, 42, 0, 7); cx.fill();
+  cx.drawImage(SPR.sit, W / 2 - SPR.sit.width / 2, py - SPR.sit.height / 2 + Math.sin(stateT * 3) * 3);
+  drawHeart(W / 2 + 30, py - 6 + Math.sin(stateT * 3) * 3, 6);
 
   chunkyText('ARROWS/WASD: RUN + CLIMB     Z / X: DIG', W / 2, 318, 11, '#fdf6e7');
   chunkyText('COLLECT EVERY TREAT, THEN RUN HOME TO SNUGGLE', W / 2, 338, 11, '#fdf6e7');
   chunkyText('WARNING: SQUIRRELS ARE EXTREMELY DISTRACTING', W / 2, 358, 11, '#ff8fb2');
   if (Math.floor(stateT * 2) % 2 === 0)
     chunkyText('- PRESS ENTER TO PLAY -', W / 2, 392, 16, '#ffe14d');
-  chunkyText(`HI SCORE ${String(hiscore).padStart(6, '0')}`, W / 2, 416, 11, '#7e5bef');
-  chunkyText('© 1996 GOOD DOG SOFTWARE', W / 2, H - 14, 9, '#5a5470');
+  chunkyText(`HI SCORE ${String(hiscore).padStart(6, '0')}`, W / 2, 412, 11, '#7e5bef');
+  chunkyText('© 1996 GOOD DOG SOFTWARE', W / 2, H - 6, 9, '#5a5470');
 }
 
 function drawWorld() {
