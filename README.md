@@ -21,6 +21,7 @@ Open `index.html` in any modern browser. No build step, no dependencies.
 | ← → / A D | Run |
 | ↑ ↓ / W S | Climb ladders, drop from bars |
 | **Z** / **X** | Dig a hole to the left / right |
+| **SPACE** | Give a nut to the nearest squirrel |
 | M | Mute |
 | R | Send Penny back to her start spot (costs a heart) |
 | Enter | Start |
@@ -36,6 +37,11 @@ Open `index.html` in any modern browser. No build step, no dependencies.
   flashes a warning when one gets close. Squirrels are slowest on Level 1,
   to ease you in. Penny gets a brief flash of invulnerability each time
   she (re)spawns.
+- **Nuts** — acorns scattered around each level (Penny can pocket up to 3).
+  Press **SPACE** near a squirrel to give it one: it sprints away with its
+  prize (+50) and sits down to munch for a good while — completely harmless
+  until it finishes eating. If no squirrel is close enough, Penny keeps the
+  nut.
 - **Digging** — bricks (pink) can be dug through, Lode Runner style. Drop a
   squirrel into a hole to trap it (+75) — you can safely run across a trapped
   squirrel's head. Holes refill after a few seconds, so don't get caught in

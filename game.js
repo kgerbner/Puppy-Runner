@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v1.8';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v1.9';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -23,13 +23,17 @@ const HOLE_WARN    = 4.0;    // s, when refill flicker starts
 const TRAP_TIME    = 2.9;    // s a squirrel stays trapped
 const SPAWN_INVULN = 1.6;    // s of immunity after (re)spawning
 const SQRL_WARN    = 3.6 * T; // distance at which the HUD warns of a squirrel
+const NUT_RANGE    = 4.5 * T; // how close a squirrel must be to receive a nut
+const NUT_FLEE     = 0.9;    // s the squirrel sprints away with its prize
+const NUT_EAT      = 6.0;    // s the squirrel sits and munches (harmless)
+const NUT_MAX      = 3;      // most nuts Penny can carry
 
 const YELLS = ['RADICAL!', 'TUBULAR!', 'PAW-SOME!', 'TOTALLY!', 'WOOF!',
                'BODACIOUS!', 'AS IF!', 'COWABUNGA!', 'YUM!'];
 
 /* ------------------------------- levels --------------------------------
    legend:  # brick (diggable)   = bedrock (solid)   H ladder   - bar
-            t treat   s squirrel   P penny start   F family couch
+            t treat   n nut   s squirrel   P penny start   F family couch
             . empty
    Each map is 16 rows of 28 chars (validated by tools/validate-levels.mjs)
 ------------------------------------------------------------------------- */
@@ -45,7 +49,7 @@ const LEVELS = [
       '...####H...........H####....',
       '.......H...........H........',
       '.......H..--------.H........',
-      '.t.....H...........H..s..t..',
+      '.t...n.H...........H..s..t..',
       '####H#####.......#########H#',
       '....H.....................H.',
       '....H........t............H.',
@@ -53,13 +57,13 @@ const LEVELS = [
       '....H.....H.....H.........H.',
       '..t.H.....H..t..H.........H.',
       '#######H##########H#########',
-      '.P.....H..........H....t..F.',
+      '.P.....H....n.....H....t..F.',
       '============================',
     ],
   },
   {
     name: 'LEVEL 2: SQUIRREL PARK',
-    tip: 'Watch out - squirrels are not friends! One touch and you lose a life.',
+    tip: 'Squirrel trouble? Grab a nut and press SPACE to bribe it!',
     sqSpeed: 0.62,
     map: [
       '............................',
@@ -67,7 +71,7 @@ const LEVELS = [
       '.####H..............H####...',
       '.....H....-------...H.......',
       '.....H..............H.......',
-      '..s..H....t....t....H..s....',
+      '..s..H.n..t....t....H..s....',
       '###H#####H######H#####H#####',
       '...H.....H......H.....H.....',
       '...H..t..H......H..t..H.....',
@@ -76,7 +80,7 @@ const LEVELS = [
       '.......H.......H..H.........',
       '..t....H.......H..H....t....',
       '####H#####################H#',
-      '.P..H...t...........t..F..H.',
+      '.P..H...t...n.......t..F..H.',
       '============================',
     ],
   },
@@ -93,13 +97,13 @@ const LEVELS = [
       '..H#####H##########H###H#..H',
       '........H..t....t..H.......H',
       '........H#########.H.......H',
-      '.t......H..........H......t.',
-      '###H#######......######H####',
-      '...H........................',
-      '...H...####H######..........',
-      '...H...#...H.....#....s.....',
-      '...H...#.t.H..t..#..#####H..',
-      '.P.H...###########..F....H..',
+      '.t...n..H..........H......t.',
+      '###H#######......##H###H####',
+      '...H...............H........',
+      '...H...####H######.H........',
+      '...H...#...H.....#.H..s.....',
+      '...H...#.t.H..t..#.H#####H..',
+      '.P.H...###########nHF....H..',
       '============================',
     ],
   },
@@ -245,6 +249,18 @@ const TREAT = [[
   '.oo....oo.',
 ]];
 
+// Acorn nut pickup. 8 x 8.
+const NUT = [[
+  '...DD...',
+  '.DDDDDD.',
+  'DDDDDDDD',
+  '.LLLLLL.',
+  '.LwLLLL.',
+  '.LLLLLL.',
+  '..LLLL..',
+  '...LL...',
+]];
+
 // The family: three kids on the couch.
 //   left  = oldest (12), girl, light brown hair (L), shoulder length
 //   middle= 9-year-old, girl, dark brown hair (D), below the shoulders
@@ -305,6 +321,7 @@ function buildSprites() {
   SPR.sqrlL  = SQRL.map(f => buildSprite(f, 1.5));
   SPR.sqrlR  = SPR.sqrlL.map(flipSprite);
   SPR.treat  = buildSprite(TREAT[0], 1.6);
+  SPR.nut    = buildSprite(NUT[0], 1.7);
   SPR.family = buildSprite(FAMILY[0], 2.0);
 }
 
@@ -332,6 +349,8 @@ const SFX = {
   alert:   () => { tone(1200, .06, 'square', .1); tone(1500, .06, 'square', .1, .07); tone(1200, .06, 'square', .1, .14); },
   boop:    () => tone(520, .1, 'triangle', .16, 0, 300),
   trap:    () => { tone(400, .08, 'square', .1); tone(300, .12, 'square', .1, .08); },
+  nut:     () => { tone(740, .07, 'triangle', .14); tone(988, .1, 'triangle', .14, .07); },
+  give:    () => { tone(880, .08, 'triangle', .13); tone(660, .08, 'triangle', .13, .08); tone(990, .14, 'triangle', .13, .16); },
   die:     () => { tone(440, .15, 'square', .14); tone(330, .15, 'square', .14, .15); tone(220, .3, 'square', .14, .3, -100); },
   open:    () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, .12, 'triangle', .12, i * .09)); },
   snuggle: () => { [392, 523, 659, 784, 659, 1046].forEach((f, i) => tone(f, .16, 'triangle', .12, i * .12)); },
@@ -347,7 +366,7 @@ cx.imageSmoothingEnabled = false;
 let state = 'title';          // title | intro | play | snuggle | dead | gameover | win
 let stateT = 0;               // time in current state
 let level = 0, score = 0, lives = LIVES_START, hiscore = 0;
-let grid = [], holes = new Map(), treats = [], squirrels = [];
+let grid = [], holes = new Map(), treats = [], nuts = [], squirrels = [];
 let penny = null, family = { x: 0, y: 0 };
 let exitOpen = false, popups = [], hearts = [], confetti = [];
 let levelTime = 0, frame = 0;
@@ -382,13 +401,14 @@ function solid(c, r) { const ch = tile(c, r); return ch === '#' || ch === '='; }
 
 function loadLevel(n) {
   const L = LEVELS[n];
-  grid = []; holes.clear(); treats = []; squirrels = [];
+  grid = []; holes.clear(); treats = []; nuts = []; squirrels = [];
   exitOpen = false; popups = []; hearts = []; levelTime = 0;
   for (let r = 0; r < ROWS; r++) {
     const row = [];
     for (let c = 0; c < COLS; c++) {
       let ch = L.map[r][c];
       if (ch === 't') { treats.push({ c, r, got: false }); ch = '.'; }
+      else if (ch === 'n') { nuts.push({ c, r, got: false }); ch = '.'; }
       else if (ch === 'P') { penny = makePenny(c, r); ch = '.'; }
       else if (ch === 's') { squirrels.push(makeSquirrel(c, r, L.sqSpeed ?? 1)); ch = '.'; } // per-level squirrel speed
       else if (ch === 'F') { family = { c, r, x: c * T + T / 2, y: r * T + T / 2 }; ch = '.'; }
@@ -402,7 +422,7 @@ function makePenny(c, r) {
   return {
     x: c * T + T / 2, y: r * T + T / 2, spawnC: c, spawnR: r,
     face: 1, anim: 0, falling: false, onBar: false, climbing: false,
-    digT: 0, digDir: 0, invuln: SPAWN_INVULN, tailWag: 0,
+    digT: 0, digDir: 0, invuln: SPAWN_INVULN, tailWag: 0, nuts: 0,
   };
 }
 function makeSquirrel(c, r, factor) {
@@ -410,7 +430,7 @@ function makeSquirrel(c, r, factor) {
     x: c * T + T / 2, y: r * T + T / 2, spawnC: c, spawnR: r,
     face: -1, anim: Math.random() * 9, falling: false, climbing: false,
     trapped: 0, scamperT: 0, thinkT: Math.random() * .2, lr: 0, ud: 0,
-    spd: SQRL_SPEED * factor,
+    spd: SQRL_SPEED * factor, fleeT: 0, eatT: 0,
   };
 }
 
@@ -543,6 +563,31 @@ function tryDig(dir) {
   puff(tc * T + T / 2, tr * T + T / 2);
 }
 
+// Give a nut to the nearest squirrel: it sprints off and munches, harmless.
+function giveNut() {
+  if (penny.nuts <= 0) {
+    award(0, penny.x, penny.y - 18, 'NO NUTS!');
+    return;
+  }
+  let best = null, bd = NUT_RANGE;
+  for (const s of squirrels) {
+    if (s.trapped > 0 || s.fleeT > 0 || s.eatT > 0) continue;
+    const d = Math.hypot(s.x - penny.x, s.y - penny.y);
+    if (d < bd) { bd = d; best = s; }
+  }
+  if (!best) {                       // nobody close enough: keep the nut
+    award(0, penny.x, penny.y - 18, 'NO SQUIRREL NEAR!');
+    return;
+  }
+  penny.nuts--;
+  best.fleeT = NUT_FLEE;
+  best.face = Math.sign(best.x - penny.x) || penny.face; // run AWAY from penny
+  score += 50;
+  award(0, best.x, best.y - 16, 'NUTS! +50');
+  SFX.give();
+  heartBurst(best.x, best.y - 8, 2);
+}
+
 function updateHoles(dt) {
   for (const [k, h] of [...holes]) {
     h.t += dt;
@@ -562,6 +607,7 @@ function updateHoles(dt) {
 function respawnSquirrel(s) {
   s.x = center(s.spawnC); s.y = center(s.spawnR);
   s.trapped = 0; s.falling = false; s.climbing = false; s.onBar = false; s.scamperT = 0;
+  s.fleeT = 0; s.eatT = 0;
 }
 
 function nearestLadderCol(r, fromC, wantDown) {
@@ -593,8 +639,24 @@ function updateSquirrel(s, dt) {
   const c = colOf(s), r = rowOf(s);
   if (holes.has(key(c, r)) && !s.falling && supportedSq(s)) {
     s.trapped = TRAP_TIME;
+    s.fleeT = 0; s.eatT = 0;
     award(75, s.x, s.y - 14, 'GOTCHA!');
     SFX.trap();
+    return;
+  }
+
+  // bribed with a nut: sprint away with the prize, then sit and munch
+  if (s.fleeT > 0) {
+    s.fleeT -= dt;
+    moveActor(s, s.face, 0, s.spd * 1.8, dt);
+    if (s.fleeT <= 0 && !s.falling) s.eatT = NUT_EAT;
+    if (s.fleeT <= 0 && s.falling) s.fleeT = 0.05; // keep going until she lands
+    return;
+  }
+  if (s.eatT > 0) {
+    if (s.falling) { moveActor(s, 0, 0, s.spd, dt); return; } // gravity still applies
+    s.eatT -= dt;
+    s.anim += dt * 6; // happy munching wiggle
     return;
   }
 
@@ -674,6 +736,7 @@ function updatePlay(dt) {
     if (keys['arrowdown'] || keys['s']) ud = 1;
     if ((keys['z'] || keys['q']) && !penny.falling && !penny.onBar) { keys['z'] = keys['q'] = false; tryDig(-1); }
     if ((keys['x'] || keys['e']) && !penny.falling && !penny.onBar) { keys['x'] = keys['e'] = false; tryDig(1); }
+    if (keys[' '] || keys['c']) { keys[' '] = keys['c'] = false; giveNut(); }
   }
   if (penny.digT > 0) penny.digT -= dt;
   else moveActor(penny, lr, ud, PENNY_SPEED, dt);
@@ -685,11 +748,21 @@ function updatePlay(dt) {
   // --- a squirrel catches Penny: lose a life (Lode Runner style) ---
   if (penny.invuln <= 0) {
     for (const s of squirrels) {
-      if (s.trapped > 0) continue; // safe to run over a trapped squirrel
+      if (s.trapped > 0 || s.fleeT > 0 || s.eatT > 0) continue; // trapped or bribed = harmless
       if (Math.abs(s.x - penny.x) < 14 && Math.abs(s.y - penny.y) < 14) {
         loseLife(false);
         return; // state changed to dead/gameover
       }
+    }
+  }
+
+  // --- nuts ---
+  for (const nt of nuts) {
+    if (nt.got || penny.nuts >= NUT_MAX) continue;
+    if (colOf(penny) === nt.c && rowOf(penny) === nt.r) {
+      nt.got = true; penny.nuts++;
+      award(0, penny.x, penny.y - 18, '+1 NUT!');
+      SFX.nut();
     }
   }
 
@@ -892,6 +965,11 @@ function drawSquirrel(s) {
   if (s.trapped > 0) dy += 6; // sunk in the hole
   cx.drawImage(img, px(s.x - img.width / 2), px(dy));
   if (s.trapped > 0) chunkyText('!', px(s.x), px(dy - 8), 12, '#ffe14d');
+  if (s.eatT > 0 || s.fleeT > 0) {
+    const munch = s.eatT > 0 ? Math.sin(s.anim * 4) * 1.5 : 0;
+    cx.drawImage(SPR.nut, px(s.x - s.face * 10 - SPR.nut.width / 2), px(dy + 6 + munch));
+    if (s.eatT > 0) chunkyText('NOM', px(s.x), px(dy - 8), 9, '#d59247', 'center', '#fff6e8');
+  }
 }
 
 function drawTreats() {
@@ -900,6 +978,12 @@ function drawTreats() {
     const bob = Math.sin(stateT * 4 + t.c) * 1.5;
     cx.drawImage(SPR.treat, px(t.c * T + T / 2 - SPR.treat.width / 2),
                  px(HUD + t.r * T + T - SPR.treat.height - 2 + bob));
+  }
+  for (const nt of nuts) {
+    if (nt.got) continue;
+    const bob = Math.sin(stateT * 4 + nt.c * 2) * 1.5;
+    cx.drawImage(SPR.nut, px(nt.c * T + T / 2 - SPR.nut.width / 2),
+                 px(HUD + nt.r * T + T - SPR.nut.height - 2 + bob));
   }
 }
 
@@ -941,6 +1025,9 @@ function drawHUD() {
   const left = treats.filter(t => !t.got).length;
   cx.drawImage(SPR.treat, 300, 8, 20, 14);
   chunkyText(`x ${left}`, 340, 16, 13, '#ffe14d');
+  // nut pouch
+  cx.drawImage(SPR.nut, 386, 6, 15, 15);
+  chunkyText(`x ${penny ? penny.nuts : 0}`, 424, 16, 13, '#d59247');
   chunkyText(LEVELS[level] ? LEVELS[level].name : '', 330, 35, 9, '#9aa0ab');
   // squirrel danger warning: nearest active squirrel
   let near = 1e9;
@@ -1025,9 +1112,9 @@ function drawTitle() {
   cx.drawImage(SPR.sit, W / 2 - SPR.sit.width / 2, py - SPR.sit.height / 2 + Math.sin(stateT * 3) * 3);
   drawHeart(W / 2 + 30, py - 6 + Math.sin(stateT * 3) * 3, 6);
 
-  chunkyText('ARROWS/WASD: RUN + CLIMB     Z / X: DIG', W / 2, 318, 11, '#fdf6e7');
+  chunkyText('ARROWS/WASD: RUN + CLIMB   Z/X: DIG   SPACE: GIVE NUT', W / 2, 318, 11, '#fdf6e7');
   chunkyText('COLLECT EVERY TREAT, THEN RUN HOME TO SNUGGLE', W / 2, 338, 11, '#fdf6e7');
-  chunkyText('WARNING: DODGE THE SQUIRRELS - DIG HOLES TO TRAP THEM!', W / 2, 358, 11, '#ff8fb2');
+  chunkyText('DODGE SQUIRRELS! TRAP THEM IN HOLES, OR BRIBE THEM WITH NUTS', W / 2, 358, 11, '#ff8fb2');
   if (Math.floor(stateT * 2) % 2 === 0)
     chunkyText('- PRESS ENTER TO PLAY -', W / 2, 392, 16, '#ffe14d');
   chunkyText(`HI SCORE ${String(hiscore).padStart(6, '0')}`, W / 2, 412, 11, '#7e5bef');
