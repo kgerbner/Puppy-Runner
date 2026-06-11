@@ -19,11 +19,9 @@ const DIG_TIME     = 0.34;   // s, penny locked while digging
 const HOLE_LIFE    = 5.2;    // s before a hole refills
 const HOLE_WARN    = 4.0;    // s, when refill flicker starts
 const TRAP_TIME    = 2.9;    // s a squirrel stays trapped
-const DISTRACT_RANGE = 5 * T;
-const DISTRACT_FILL  = 0.42; // meter per second near a squirrel
-const DISTRACT_DECAY = 0.55;
-const DISTRACT_TIME  = 1.35; // s of uncontrollable squirrel-chasing
-const FOCUS_TIME     = 4.0;  // s of immunity after shaking it off
+const SLOW_FACTOR  = 0.6;    // speed of a "slow" (tutorial) squirrel
+const SPAWN_INVULN = 1.6;    // s of immunity after (re)spawning
+const SQRL_WARN    = 3.6 * T; // distance at which the HUD warns of a squirrel
 
 const YELLS = ['RADICAL!', 'TUBULAR!', 'PAW-SOME!', 'TOTALLY!', 'WOOF!',
                'BODACIOUS!', 'AS IF!', 'COWABUNGA!', 'YUM!'];
@@ -59,7 +57,7 @@ const LEVELS = [
   },
   {
     name: 'LEVEL 2: SQUIRREL PARK',
-    tip: 'Squirrels are SO distracting... stay focused, Penny!',
+    tip: 'Watch out - squirrels are not friends! One touch and you lose a life.',
     map: [
       '............................',
       '..t.....................t...',
@@ -110,6 +108,7 @@ const PAL = {
   p: '#ff8fb2', g: '#7e8498', G: '#555a6a', r: '#a3552c', e: '#22222a',
   y: '#ffd23e', b: '#5ec8e8', m: '#ff4fa3', v: '#7e5bef', n: '#274060',
   s: '#f2c894', h: '#ff6b81',
+  L: '#c08a4a', D: '#43291a', // kids' hair: light brown / dark brown
 };
 
 // Penny, facing right. 16 x 12.
@@ -241,24 +240,25 @@ const TREAT = [[
   '.oo....oo.',
 ]];
 
-// The family on the couch. 24 x 16.
+// The family: three kids on the couch. Two girls + a boy; two with light
+// brown hair (L), one girl (the 9-year-old) with dark brown hair (D). 28 x 16.
 const FAMILY = [[
-  '........................',
-  '...nn..........nn.......',
-  '..ssss........ssss......',
-  '..ssks........skss......',
-  '..ssss........ssss......',
-  'vvvsssvvvvvvvvssssvvv...',
-  'vbbsssbbbbbbbbssssbbv...',
-  'vbbsssbbbhhbbbssssbbv...',
-  'vbbsssbbhhhhbbssssbbv...',
-  'vbbsssbbbhhbbbssssbbv...',
-  'vbbbbbbbbbbbbbbbbbbbv...',
-  'vvvvvvvvvvvvvvvvvvvvv...',
-  '.vv.................vv..',
-  '.vv.................vv..',
-  '........................',
-  '........................',
+  '............................',
+  '...........DDDDDD...........',
+  '...LLLLL..DDDDDDDD..LLLLL...',
+  '...LsssL..DssssssD..sLLLs...',
+  '...LkskL..DskskssD..sksks...',
+  '...LsssL..DssssssD..sssss...',
+  '...LshsL..DsshhssD..sshss...',
+  '...LmmmL..DyyyyyyD..bbbbb...',
+  'vv.mmmmm..DyyyyyyD..bbbbb.vv',
+  'vv.mmmmm..yyyyyyyy..bbbbb.vv',
+  'vvvvvvvvvvvvvvvvvvvvvvvvvvvv',
+  'vvvvvvvvvnvvvvvvvvnvvvvvvvvv',
+  'vvvvvvvvvnvvvvvvvvnvvvvvvvvv',
+  'nnnnnnnnnnnnnnnnnnnnnnnnnnnn',
+  '.vv......................vv.',
+  '............................',
 ]];
 
 function buildSprite(rows, scale) {
@@ -381,7 +381,7 @@ function loadLevel(n) {
       let ch = L.map[r][c];
       if (ch === 't') { treats.push({ c, r, got: false }); ch = '.'; }
       else if (ch === 'P') { penny = makePenny(c, r); ch = '.'; }
-      else if (ch === 's') { squirrels.push(makeSquirrel(c, r)); ch = '.'; }
+      else if (ch === 's') { squirrels.push(makeSquirrel(c, r, n === 0)); ch = '.'; } // level 1 squirrels are slow
       else if (ch === 'F') { family = { c, r, x: c * T + T / 2, y: r * T + T / 2 }; ch = '.'; }
       row.push(ch);
     }
@@ -393,16 +393,15 @@ function makePenny(c, r) {
   return {
     x: c * T + T / 2, y: r * T + T / 2, spawnC: c, spawnR: r,
     face: 1, anim: 0, falling: false, onBar: false, climbing: false,
-    digT: 0, digDir: 0, distract: 0, distractT: 0, focusT: 0, stunT: 0,
-    tailWag: 0,
+    digT: 0, digDir: 0, invuln: SPAWN_INVULN, tailWag: 0,
   };
 }
-function makeSquirrel(c, r) {
+function makeSquirrel(c, r, slow) {
   return {
     x: c * T + T / 2, y: r * T + T / 2, spawnC: c, spawnR: r,
     face: -1, anim: Math.random() * 9, falling: false, climbing: false,
     trapped: 0, scamperT: 0, thinkT: Math.random() * .2, lr: 0, ud: 0,
-    carrying: null, outC: 0, outR: 0,
+    carrying: null, spd: SQRL_SPEED * (slow ? SLOW_FACTOR : 1),
   };
 }
 
@@ -596,7 +595,7 @@ function updateSquirrel(s, dt) {
   }
   if (s.scamperT > 0) s.scamperT -= dt;
 
-  const speed = s.scamperT > 0 ? SQRL_SPEED * 1.9 : SQRL_SPEED;
+  const speed = s.scamperT > 0 ? s.spd * 1.7 : s.spd;
   const ox = s.x;
   moveActor(s, s.lr, s.ud, speed, dt);
   if (s.lr !== 0 && Math.abs(s.x - ox) < 0.01 && !s.falling) s.face *= -1; // bonked a wall
@@ -644,52 +643,19 @@ function loseLife(voluntary) {
 function respawnPenny() {
   penny.x = center(penny.spawnC); penny.y = center(penny.spawnR);
   penny.falling = false; penny.onBar = false; penny.climbing = false;
-  penny.distract = 0; penny.distractT = 0; penny.focusT = 2; penny.stunT = 0;
+  penny.invuln = SPAWN_INVULN;
   for (const s of squirrels) respawnSquirrel(s);
 }
 
 /* -------------------------------- update ------------------------------- */
-function nearestSquirrel() {
-  let best = null, bd = 1e9;
-  for (const s of squirrels) {
-    if (s.trapped > 0) continue;
-    const d = Math.hypot(s.x - penny.x, s.y - penny.y);
-    if (d < bd) { bd = d; best = s; }
-  }
-  return { s: best, d: bd };
-}
-
 function updatePlay(dt) {
   levelTime += dt;
   updateHoles(dt);
-
-  // --- distraction meter ---
-  const { s: nearSq, d } = nearestSquirrel();
-  if (penny.distractT > 0) {
-    penny.distractT -= dt;
-    if (penny.distractT <= 0) {
-      penny.focusT = FOCUS_TIME;
-      award(0, penny.x, penny.y - 20, 'GOOD GIRL!');
-    }
-  } else if (penny.focusT > 0) {
-    penny.focusT -= dt;
-  } else if (nearSq && d < DISTRACT_RANGE && Math.abs(nearSq.y - penny.y) < T * 1.5) {
-    penny.distract += DISTRACT_FILL * dt * (1.5 - d / DISTRACT_RANGE);
-    if (penny.distract >= 1) {
-      penny.distract = 0; penny.distractT = DISTRACT_TIME;
-      award(0, penny.x, penny.y - 20, 'SQUIRREL!!');
-      SFX.alert();
-    }
-  } else {
-    penny.distract = Math.max(0, penny.distract - DISTRACT_DECAY * dt);
-  }
+  if (penny.invuln > 0) penny.invuln -= dt;
 
   // --- penny input / movement ---
   let lr = 0, ud = 0;
-  if (penny.stunT > 0) penny.stunT -= dt;
-  else if (penny.distractT > 0 && nearSq) {
-    lr = Math.sign(nearSq.x - penny.x) || penny.face;   // must. chase. squirrel.
-  } else if (penny.digT <= 0) {
+  if (penny.digT <= 0) {
     if (keys['arrowleft'] || keys['a']) lr = -1;
     if (keys['arrowright'] || keys['d']) lr = 1;
     if (keys['arrowup'] || keys['w']) ud = -1;
@@ -698,25 +664,20 @@ function updatePlay(dt) {
     if ((keys['x'] || keys['e']) && !penny.falling && !penny.onBar) { keys['x'] = keys['e'] = false; tryDig(1); }
   }
   if (penny.digT > 0) penny.digT -= dt;
-  else {
-    const sp = penny.distractT > 0 ? PENNY_SPEED * 1.35 : PENNY_SPEED;
-    moveActor(penny, lr, ud, sp, dt);
-  }
+  else moveActor(penny, lr, ud, PENNY_SPEED, dt);
   penny.tailWag += dt * (lr !== 0 ? 14 : 6);
 
   // --- squirrels ---
   for (const s of squirrels) updateSquirrel(s, dt);
 
-  // --- boop! ---
-  for (const s of squirrels) {
-    if (s.trapped > 0 || s.scamperT > 0.5) continue;
-    if (Math.abs(s.x - penny.x) < 15 && Math.abs(s.y - penny.y) < 15) {
-      s.scamperT = 1.6; s.face = Math.sign(s.x - penny.x) || 1;
-      if (s.carrying) { s.carrying.c = colOf(s); s.carrying.r = rowOf(s); s.carrying.held = false; s.carrying = null; }
-      penny.distract = 0; penny.distractT = 0; penny.focusT = FOCUS_TIME; penny.stunT = 0.35;
-      award(25, penny.x, penny.y - 18, 'BOOP!');
-      SFX.boop();
-      heartBurst(penny.x, penny.y - 10, 2);
+  // --- a squirrel catches Penny: lose a life (Lode Runner style) ---
+  if (penny.invuln <= 0) {
+    for (const s of squirrels) {
+      if (s.trapped > 0) continue; // safe to run over a trapped squirrel
+      if (Math.abs(s.x - penny.x) < 14 && Math.abs(s.y - penny.y) < 14) {
+        loseLife(false);
+        return; // state changed to dead/gameover
+      }
     }
   }
 
@@ -902,22 +863,9 @@ function drawPenny() {
   const bounce = a.falling ? 0 : Math.sin(a.anim * 3) * (a.anim > 0 ? 1.2 : 0);
   const dx = px(a.x - img.width / 2);
   const dy = px(HUD + a.y - img.height + T / 2 - 1 + bounce);
-  if (a.stunT > 0 && Math.floor(frame / 3) % 2) return; // blink while stunned
+  if (a.invuln > 0 && Math.floor(frame / 4) % 2) return; // blink while invulnerable
   cx.drawImage(img, dx, dy);
 
-  // distracted thought-bubble
-  if (a.distractT > 0) {
-    const bx = px(a.x), by = px(HUD + a.y - 34 + Math.sin(stateT * 12) * 2);
-    cx.fillStyle = '#fff';
-    cx.beginPath(); cx.arc(bx, by, 12, 0, 7); cx.fill();
-    cx.beginPath(); cx.arc(bx - 8, by + 11, 3, 0, 7); cx.fill();
-    cx.strokeStyle = '#ff4fa3'; cx.lineWidth = 1.5;
-    cx.beginPath(); cx.arc(bx, by, 12, 0, 7); cx.stroke();
-    cx.drawImage(SPR.sqrlL[0], bx - 9, by - 7, 18, 14);
-    chunkyText('!!', bx + 15, by - 4, 13, '#ff4fa3');
-  } else if (a.focusT > FOCUS_TIME - 0.8) {
-    chunkyText('GOOD GIRL', px(a.x), px(HUD + a.y - 28), 9, '#d61f7f', 'center', '#fff6e8');
-  }
   // dig sparkle
   if (a.digT > 0) {
     cx.fillStyle = '#ffe14d';
@@ -984,16 +932,21 @@ function drawHUD() {
   cx.drawImage(SPR.treat, 300, 8, 20, 14);
   chunkyText(`x ${left}`, 340, 16, 13, '#ffe14d');
   chunkyText(LEVELS[level] ? LEVELS[level].name : '', 330, 35, 9, '#9aa0ab');
-  // squirrel-distraction meter
-  chunkyText('SQUIRREL METER', 530, 12, 9, '#ff8fb2');
-  cx.fillStyle = '#2a1850'; cx.fillRect(460, 20, 140, 12);
-  const lvl = penny ? (penny.distractT > 0 ? 1 : penny.distract) : 0;
-  cx.fillStyle = lvl > 0.7 ? '#ff4fa3' : '#21d3ee';
-  cx.fillRect(462, 22, 136 * Math.min(1, lvl), 8);
-  cx.strokeStyle = '#7e5bef'; cx.strokeRect(460.5, 20.5, 140, 12);
-  if (penny && penny.focusT > 0 && penny.distractT <= 0)
-    chunkyText('FOCUSED!', 530, 41, 9, '#ffe14d');
-  if (muted) chunkyText('MUTE', 630, 12, 9, '#9aa0ab');
+  // squirrel danger warning: nearest active squirrel
+  let near = 1e9;
+  for (const s of squirrels) {
+    if (s.trapped > 0) continue;
+    near = Math.min(near, Math.hypot(s.x - penny.x, s.y - penny.y));
+  }
+  cx.drawImage(SPR.sqrlL[0], 470, 14, 24, 19);
+  if (near < SQRL_WARN && Math.floor(frame / 8) % 2) {
+    chunkyText('!! SQUIRREL !!', 590, 16, 12, '#ff4fa3');
+    chunkyText('RUN, PENNY!', 590, 35, 10, '#ffe14d');
+  } else {
+    chunkyText('AVOID SQUIRRELS', 590, 16, 10, '#ff8fb2');
+    chunkyText('DIG TO TRAP THEM', 590, 35, 9, '#9aa0ab');
+  }
+  if (muted) chunkyText('MUTE', 760, 16, 9, '#9aa0ab');
 }
 
 function drawPopups() {
@@ -1063,7 +1016,7 @@ function drawTitle() {
 
   chunkyText('ARROWS/WASD: RUN + CLIMB     Z / X: DIG', W / 2, 318, 11, '#fdf6e7');
   chunkyText('COLLECT EVERY TREAT, THEN RUN HOME TO SNUGGLE', W / 2, 338, 11, '#fdf6e7');
-  chunkyText('WARNING: SQUIRRELS ARE EXTREMELY DISTRACTING', W / 2, 358, 11, '#ff8fb2');
+  chunkyText('WARNING: DODGE THE SQUIRRELS - DIG HOLES TO TRAP THEM!', W / 2, 358, 11, '#ff8fb2');
   if (Math.floor(stateT * 2) % 2 === 0)
     chunkyText('- PRESS ENTER TO PLAY -', W / 2, 392, 16, '#ffe14d');
   chunkyText(`HI SCORE ${String(hiscore).padStart(6, '0')}`, W / 2, 412, 11, '#7e5bef');

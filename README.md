@@ -28,14 +28,16 @@ Open `index.html` in any modern browser. No build step, no dependencies.
 ## The rules of being a good dog
 
 - **Treats** — collect every biscuit on the level. 100 points apiece.
-- **Squirrels** — they roam the level, swipe unattended treats, and worst of
-  all, they're *fascinating*. Linger near one and the **SQUIRREL METER**
-  fills; when it maxes out Penny loses her mind and chases the squirrel,
-  controls be darned. Catching up to one earns a **BOOP** (+25), the squirrel
-  drops whatever it stole, and Penny feels *focused* for a while.
-- **Digging** — bricks (pink) can be dug through, Lode Runner style. Holes
-  refill after a few seconds. Trap a squirrel for +75, but don't get caught
-  in a refilling hole yourself — that costs a heart.
+- **Squirrels** — they roam the level chasing Penny and swipe unattended
+  treats. **They are not friends: one touch costs Penny a life** (classic
+  Lode Runner). Penny is faster than they are on open ground, so kite them —
+  and the HUD flashes a warning when one gets close. Level 1's squirrel is
+  slow, to ease you in. Penny gets a brief flash of invulnerability each time
+  she (re)spawns.
+- **Digging** — bricks (pink) can be dug through, Lode Runner style. Drop a
+  squirrel into a hole to trap it (+75) — you can safely run across a trapped
+  squirrel's head. Holes refill after a few seconds, so don't get caught in
+  one yourself; that costs a heart too.
 - **Snuggle time** — once the last treat is eaten the family calls from the
   couch. Get there for the snuggle bonus (faster = bigger) and the next level.
 
