@@ -20,7 +20,6 @@ const DIG_TIME     = 0.34;   // s, penny locked while digging
 const HOLE_LIFE    = 5.2;    // s before a hole refills
 const HOLE_WARN    = 4.0;    // s, when refill flicker starts
 const TRAP_TIME    = 2.9;    // s a squirrel stays trapped
-const SLOW_FACTOR  = 0.6;    // speed of a "slow" (tutorial) squirrel
 const SPAWN_INVULN = 1.6;    // s of immunity after (re)spawning
 const SQRL_WARN    = 3.6 * T; // distance at which the HUD warns of a squirrel
 
@@ -37,6 +36,7 @@ const LEVELS = [
   {
     name: 'LEVEL 1: BACKYARD BASICS',
     tip: 'Grab every treat, then head home to the family!',
+    sqSpeed: 0.55,   // squirrel speed multiplier (Penny is much faster)
     map: [
       '............................',
       '............................',
@@ -59,6 +59,7 @@ const LEVELS = [
   {
     name: 'LEVEL 2: SQUIRREL PARK',
     tip: 'Watch out - squirrels are not friends! One touch and you lose a life.',
+    sqSpeed: 0.62,
     map: [
       '............................',
       '..t.....................t...',
@@ -72,7 +73,7 @@ const LEVELS = [
       '...####H##..tt.H##H####.....',
       '.......H..#####H..H.........',
       '.......H.......H..H.........',
-      '..t....H....s..H..H....t....',
+      '..t....H.......H..H....t....',
       '####H#####################H#',
       '.P..H...t...........t..F..H.',
       '============================',
@@ -81,6 +82,7 @@ const LEVELS = [
   {
     name: 'LEVEL 3: THE BIG DIG',
     tip: 'Press Z / X to dig! Trap squirrels, tunnel to treats.',
+    sqSpeed: 0.68,
     map: [
       '............................',
       '.....t...............t......',
@@ -387,7 +389,7 @@ function loadLevel(n) {
       let ch = L.map[r][c];
       if (ch === 't') { treats.push({ c, r, got: false }); ch = '.'; }
       else if (ch === 'P') { penny = makePenny(c, r); ch = '.'; }
-      else if (ch === 's') { squirrels.push(makeSquirrel(c, r, n === 0)); ch = '.'; } // level 1 squirrels are slow
+      else if (ch === 's') { squirrels.push(makeSquirrel(c, r, L.sqSpeed ?? 1)); ch = '.'; } // per-level squirrel speed
       else if (ch === 'F') { family = { c, r, x: c * T + T / 2, y: r * T + T / 2 }; ch = '.'; }
       row.push(ch);
     }
@@ -402,12 +404,12 @@ function makePenny(c, r) {
     digT: 0, digDir: 0, invuln: SPAWN_INVULN, tailWag: 0,
   };
 }
-function makeSquirrel(c, r, slow) {
+function makeSquirrel(c, r, factor) {
   return {
     x: c * T + T / 2, y: r * T + T / 2, spawnC: c, spawnR: r,
     face: -1, anim: Math.random() * 9, falling: false, climbing: false,
     trapped: 0, scamperT: 0, thinkT: Math.random() * .2, lr: 0, ud: 0,
-    carrying: null, spd: SQRL_SPEED * (slow ? SLOW_FACTOR : 1),
+    carrying: null, spd: SQRL_SPEED * factor,
   };
 }
 
