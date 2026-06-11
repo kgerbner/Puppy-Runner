@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PENNY RUNNER — A Very Good Dog Adventure</title>
+<style>
+  :root {
+    --pink: #ff4fa3;
+    --teal: #21d3ee;
+    --yellow: #ffe14d;
+    --purple: #7e5bef;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    font-family: "Courier New", monospace;
+    color: #fdf6e7;
+    background-color: #160b33;
+    /* 90s memphis wallpaper */
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(255,79,163,.16) 0 12px, transparent 13px),
+      radial-gradient(circle at 80% 70%, rgba(33,211,238,.16) 0 10px, transparent 11px),
+      radial-gradient(circle at 60% 15%, rgba(255,225,77,.13) 0 8px, transparent 9px),
+      radial-gradient(circle at 30% 80%, rgba(126,91,239,.18) 0 14px, transparent 15px),
+      repeating-linear-gradient(45deg, transparent 0 34px, rgba(255,79,163,.05) 34px 38px),
+      repeating-linear-gradient(-45deg, transparent 0 46px, rgba(33,211,238,.05) 46px 50px);
+    background-size: 420px 420px, 380px 380px, 300px 300px, 460px 460px, auto, auto;
+  }
+  header { text-align: center; line-height: 1.2; }
+  header h1 {
+    margin: 10px 0 0;
+    font-size: 15px;
+    letter-spacing: 4px;
+    color: var(--teal);
+    text-shadow: 2px 2px 0 var(--pink), 4px 4px 0 #1b0b2e;
+  }
+  header p { margin: 2px 0 0; font-size: 11px; color: var(--purple); letter-spacing: 2px; }
+  .frame {
+    padding: 10px;
+    background: linear-gradient(135deg, var(--pink), var(--purple) 50%, var(--teal));
+    border-radius: 10px;
+    box-shadow: 0 0 0 3px #1b0b2e, 0 0 38px rgba(255, 79, 163, .45), 0 0 70px rgba(33, 211, 238, .25);
+  }
+  canvas {
+    display: block;
+    width: min(96vw, 1008px);
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: #0d0626;
+    border-radius: 4px;
+  }
+  footer { font-size: 11px; color: #6e6492; letter-spacing: 1px; text-align: center; }
+  footer b { color: var(--yellow); }
+</style>
+</head>
+<body>
+  <header>
+    <h1>★ PENNY RUNNER ★</h1>
+    <p>A LODE-RUNNER-STYLE ADVENTURE STARRING A CAVALIER KING CHARLES SPANIEL</p>
+  </header>
+  <div class="frame"><canvas id="game"></canvas></div>
+  <footer>
+    <b>ARROWS / WASD</b> move &nbsp;·&nbsp; <b>Z / X</b> dig &nbsp;·&nbsp; <b>M</b> mute
+    &nbsp;·&nbsp; <b>R</b> restart spot &nbsp;·&nbsp; <b>ENTER</b> start
+  </footer>
+  <script src="game.js"></script>
+</body>
+</html>
