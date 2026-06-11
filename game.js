@@ -107,7 +107,7 @@ const LEVELS = [
 const PAL = {
   // penny is a black & tan cavalier: o outline, c black coat, d/e coat shade, w tan points
   o: '#101016', c: '#34343f', d: '#26262f', w: '#d59247', k: '#15151b',
-  p: '#ff8fb2', g: '#9aa0ab', G: '#70757f', r: '#b0623a', e: '#22222a',
+  p: '#ff8fb2', g: '#7e8498', G: '#555a6a', r: '#a3552c', e: '#22222a',
   y: '#ffd23e', b: '#5ec8e8', m: '#ff4fa3', v: '#7e5bef', n: '#274060',
   s: '#f2c894', h: '#ff6b81',
 };
@@ -117,10 +117,10 @@ const PENNY_RUN = [[
   '..........oooo..',
   '.........occcco.',
   'oo......occcccco',
-  '.oo....occeecwwo',
+  '.oo....occeecwco',
   '..ooooooccewwkwo',
   '..occccccceewwwk',
-  '.occwwccccewwwo.',
+  '.occwwccccesswo.',
   '.ocwwwwccccwwp..',
   '.owwwwwwccoooo..',
   '..owwowwoc......',
@@ -130,10 +130,10 @@ const PENNY_RUN = [[
   '..........oooo..',
   '.........occcco.',
   '.oo.....occcccco',
-  '..oo...occeecwwo',
+  '..oo...occeecwco',
   '..ooooooccewwkwo',
   '..occccccceewwwk',
-  '.occwwccccewwwo.',
+  '.occwwccccesswo.',
   '.ocwwwwccccwwp..',
   '.owwwwwwccoooo..',
   '..owwowwoc......',
@@ -191,14 +191,14 @@ const PENNY_SIT = [[
   '......oooo......',
   '.....occcco.....',
   '....occcccco....',
-  '...oeccwwccdo...',
+  '...oeccwcwcdo...',
   '...oecwkwkcdo...',
   '...oecwwwwcdo...',
   '....ocwkkwco....',
-  '....owwppwwo....',
-  '...owwwwwwwwo...',
+  '....owsppswo....',
+  '...ocwwwwwwco...',
   '..owcwwwwwwco...',
-  '..owwwwwwwwwo...',
+  '..ocwwwwwwwco...',
   '..ow.owwwwo.wo..',
   '..oo.oo..oo.oo..',
 ]];
@@ -811,12 +811,12 @@ function rainbowText(txt, x, y, size) {
 }
 
 function drawBG() {
-  // 90s sunset-grid backdrop
+  // bright 90s pastel backdrop — keeps a mostly-black dog visible
   const g = cx.createLinearGradient(0, HUD, 0, H);
-  g.addColorStop(0, '#241047'); g.addColorStop(0.6, '#341a5e'); g.addColorStop(1, '#1c0f38');
+  g.addColorStop(0, '#fff3df'); g.addColorStop(0.55, '#ffe2ee'); g.addColorStop(1, '#e3f2ec');
   cx.fillStyle = g;
   cx.fillRect(0, HUD, W, H - HUD);
-  cx.strokeStyle = 'rgba(126,91,239,0.18)';
+  cx.strokeStyle = 'rgba(126,91,239,0.12)';
   cx.lineWidth = 1;
   for (let c = 0; c <= COLS; c += 2) {
     cx.beginPath(); cx.moveTo(c * T, HUD); cx.lineTo(c * T, H); cx.stroke();
@@ -830,8 +830,8 @@ function drawBG() {
     if (tile(((i * 97) % COLS), ((i * 53) % ROWS)) !== '.') continue;
     cx.save();
     cx.translate(sx, sy);
-    cx.globalAlpha = 0.16;
-    cx.fillStyle = ['#ff4fa3', '#21d3ee', '#ffe14d'][i % 3];
+    cx.globalAlpha = 0.35;
+    cx.fillStyle = ['#ff4fa3', '#21d3ee', '#f5a623'][i % 3];
     if (i % 3 === 0) cx.fillRect(-3, -3, 6, 6);
     else if (i % 3 === 1) { cx.beginPath(); cx.arc(0, 0, 3.4, 0, 7); cx.fill(); }
     else { cx.beginPath(); cx.moveTo(0, -4); cx.lineTo(4, 3); cx.lineTo(-4, 3); cx.fill(); }
@@ -874,18 +874,18 @@ function drawTile(c, r) {
     cx.fillStyle = 'rgba(255,255,255,0.08)';
     if ((c + r) % 2 === 0) cx.fillRect(x, y, T, T);
   } else if (ch === 'H') {
-    cx.fillStyle = '#ffd23e';
+    cx.fillStyle = '#f59f0a';
     cx.fillRect(x + 4, y, 3, T);
     cx.fillRect(x + T - 7, y, 3, T);
     cx.fillRect(x + 4, y + 4, T - 8, 3);
     cx.fillRect(x + 4, y + 15, T - 8, 3);
-    cx.fillStyle = '#c79a1d';
+    cx.fillStyle = '#a86c06';
     cx.fillRect(x + 4, y + 6, T - 8, 1);
     cx.fillRect(x + 4, y + 17, T - 8, 1);
   } else if (ch === '-') {
-    cx.fillStyle = '#cfd6e4';
+    cx.fillStyle = '#7d8496';
     cx.fillRect(x, y + 3, T, 3);
-    cx.fillStyle = '#8d93a5';
+    cx.fillStyle = '#535a6c';
     cx.fillRect(x, y + 6, T, 1);
     if (c % 3 === 0) { cx.fillStyle = '#ff4fa3'; cx.fillRect(x + 10, y + 1, 4, 7); } // clothespin
   }
@@ -909,10 +909,12 @@ function drawPenny() {
     cx.fillStyle = '#fff';
     cx.beginPath(); cx.arc(bx, by, 12, 0, 7); cx.fill();
     cx.beginPath(); cx.arc(bx - 8, by + 11, 3, 0, 7); cx.fill();
+    cx.strokeStyle = '#ff4fa3'; cx.lineWidth = 1.5;
+    cx.beginPath(); cx.arc(bx, by, 12, 0, 7); cx.stroke();
     cx.drawImage(SPR.sqrlL[0], bx - 9, by - 7, 18, 14);
     chunkyText('!!', bx + 15, by - 4, 13, '#ff4fa3');
   } else if (a.focusT > FOCUS_TIME - 0.8) {
-    chunkyText('GOOD GIRL', px(a.x), px(HUD + a.y - 28), 9, '#ffe14d');
+    chunkyText('GOOD GIRL', px(a.x), px(HUD + a.y - 28), 9, '#d61f7f', 'center', '#fff6e8');
   }
   // dig sparkle
   if (a.digT > 0) {
@@ -948,9 +950,9 @@ function drawFamily() {
   cx.drawImage(img, x, y);
   if (exitOpen) {
     const g = Math.sin(stateT * 6) * 0.5 + 0.5;
-    cx.fillStyle = `rgba(255,225,77,${0.18 + g * 0.2})`;
+    cx.fillStyle = `rgba(245,159,10,${0.22 + g * 0.22})`;
     cx.beginPath(); cx.arc(family.x, HUD + family.y - 8, 30, 0, 7); cx.fill();
-    chunkyText('HOME!', px(family.x), y - 10 - g * 3, 10, '#ffe14d');
+    chunkyText('HOME!', px(family.x), y - 10 - g * 3, 10, '#d61f7f', 'center', '#fff6e8');
     drawHeart(family.x + 26, HUD + family.y - 26 + Math.sin(stateT * 5) * 3, 5);
   }
 }
@@ -996,7 +998,7 @@ function drawPopups() {
   for (const p of popups) {
     const a = 1 - p.t / 1.2;
     cx.globalAlpha = a;
-    chunkyText(p.txt, px(p.x), px(HUD + p.y - p.t * 28), 11, '#ffe14d');
+    chunkyText(p.txt, px(p.x), px(HUD + p.y - p.t * 28), 11, '#d61f7f', 'center', '#fff6e8');
     cx.globalAlpha = 1;
   }
   for (const h of hearts) {
@@ -1046,6 +1048,12 @@ function drawTitle() {
   rainbowText('RUNNER', W / 2, 178, 64);
   chunkyText('* A VERY GOOD DOG ADVENTURE *', W / 2, 220, 14, '#21d3ee');
 
+  // warm spotlight so a black dog reads against the dark title backdrop
+  const glow = cx.createRadialGradient(W / 2, 256, 4, W / 2, 256, 42);
+  glow.addColorStop(0, 'rgba(255,238,210,0.95)');
+  glow.addColorStop(1, 'rgba(255,238,210,0)');
+  cx.fillStyle = glow;
+  cx.beginPath(); cx.arc(W / 2, 256, 42, 0, 7); cx.fill();
   cx.drawImage(SPR.sit, W / 2 - SPR.sit.width / 2, 238 + Math.sin(stateT * 3) * 3);
   drawHeart(W / 2 + 30, 246 + Math.sin(stateT * 3) * 3, 6);
 
