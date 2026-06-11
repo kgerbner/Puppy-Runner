@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v1.9';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v2.0';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -369,6 +369,7 @@ let level = 0, score = 0, lives = LIVES_START, hiscore = 0;
 let grid = [], holes = new Map(), treats = [], nuts = [], squirrels = [];
 let penny = null, family = { x: 0, y: 0 };
 let exitOpen = false, popups = [], hearts = [], confetti = [];
+let nutHintShown = false;   // teach SPACE the first time Penny pockets a nut
 let levelTime = 0, frame = 0;
 try { hiscore = +localStorage.getItem('pennyHi') || 0; } catch (e) {}
 
@@ -763,6 +764,10 @@ function updatePlay(dt) {
       nt.got = true; penny.nuts++;
       award(0, penny.x, penny.y - 18, '+1 NUT!');
       SFX.nut();
+      if (!nutHintShown) {
+        nutHintShown = true;
+        popups.push({ x: penny.x, y: penny.y - 34, t: -1.4, txt: 'PRESS SPACE BY A SQUIRREL!' });
+      }
     }
   }
 
@@ -1025,23 +1030,24 @@ function drawHUD() {
   const left = treats.filter(t => !t.got).length;
   cx.drawImage(SPR.treat, 300, 8, 20, 14);
   chunkyText(`x ${left}`, 340, 16, 13, '#ffe14d');
-  // nut pouch
+  // nut pouch + what the spacebar is for (always visible)
   cx.drawImage(SPR.nut, 386, 6, 15, 15);
   chunkyText(`x ${penny ? penny.nuts : 0}`, 424, 16, 13, '#d59247');
-  chunkyText(LEVELS[level] ? LEVELS[level].name : '', 330, 35, 9, '#9aa0ab');
+  chunkyText('SPACE = GIVE NUT', 300, 35, 9, '#d59247', 'left');
   // squirrel danger warning: nearest active squirrel
   let near = 1e9;
   for (const s of squirrels) {
-    if (s.trapped > 0) continue;
+    if (s.trapped > 0 || s.fleeT > 0 || s.eatT > 0) continue;
     near = Math.min(near, Math.hypot(s.x - penny.x, s.y - penny.y));
   }
+  const haveNuts = penny && penny.nuts > 0;
   cx.drawImage(SPR.sqrlL[0], 470, 14, 24, 19);
   if (near < SQRL_WARN && Math.floor(frame / 8) % 2) {
-    chunkyText('!! SQUIRREL !!', 590, 16, 12, '#ff4fa3');
-    chunkyText('RUN, PENNY!', 590, 35, 10, '#ffe14d');
+    chunkyText('!! SQUIRREL !!', 588, 16, 11, '#ff4fa3');
+    chunkyText(haveNuts ? 'SPACE: GIVE A NUT!' : 'RUN, OR TRAP IT!', 588, 35, 9, '#ffe14d');
   } else {
-    chunkyText('AVOID SQUIRRELS', 590, 16, 10, '#ff8fb2');
-    chunkyText('DIG TO TRAP THEM', 590, 35, 9, '#9aa0ab');
+    chunkyText('AVOID SQUIRRELS', 588, 16, 10, '#ff8fb2');
+    chunkyText('OR BRIBE WITH A NUT', 588, 35, 9, '#9aa0ab');
   }
   if (muted) chunkyText('MUTE', 760, 16, 9, '#9aa0ab');
   chunkyText(VERSION, W - 4, 40, 8, '#5a5470', 'right');
