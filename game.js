@@ -464,9 +464,11 @@ function moveActor(a, lr, ud, speed, dt) {
     const ny = a.y + ud * CLIMB_SPEED * dt;
     const nr = Math.floor(ny / T);
     if (ud < 0) { // up
-      if (tile(c, r) !== 'H' && tile(c, r - 1) !== 'H') return;
-      if (solid(c, nr)) return;
-      if (tile(c, nr) !== 'H' && ny < center(r)) { a.y = center(r); return; } // top of ladder
+      if (tile(c, r) !== 'H' && tile(c, r - 1) !== 'H') return;   // not on a ladder
+      if (solid(c, nr)) { a.y = center(r); return; }              // wall above: stay on the rung
+      if (tile(c, r) === 'H' && tile(c, nr) !== 'H') {            // climbed past the top rung...
+        a.y = center(nr); return;                                 // ...step up and stand on the landing
+      }
       a.y = ny;
     } else {      // down
       if (solid(c, nr)) { a.y = center(r); return; }
