@@ -7,6 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
+const VERSION = 'v1.6';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -963,6 +964,7 @@ function drawHUD() {
     chunkyText('DIG TO TRAP THEM', 590, 35, 9, '#9aa0ab');
   }
   if (muted) chunkyText('MUTE', 760, 16, 9, '#9aa0ab');
+  chunkyText(VERSION, W - 4, 40, 8, '#5a5470', 'right');
 }
 
 function drawPopups() {
@@ -1037,6 +1039,7 @@ function drawTitle() {
     chunkyText('- PRESS ENTER TO PLAY -', W / 2, 392, 16, '#ffe14d');
   chunkyText(`HI SCORE ${String(hiscore).padStart(6, '0')}`, W / 2, 412, 11, '#7e5bef');
   chunkyText('© 1996 GOOD DOG SOFTWARE', W / 2, H - 6, 9, '#5a5470');
+  chunkyText(VERSION, W - 8, H - 6, 9, '#5a5470', 'right');
 }
 
 function drawWorld() {
