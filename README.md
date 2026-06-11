@@ -44,6 +44,20 @@ Open `index.html` in any modern browser. No build step, no dependencies.
 Three levels: **Backyard Basics**, **Squirrel Park**, and **The Big Dig**.
 Finish all three to confirm what we already knew: Penny is a very good dog.
 
+### Made to be kid-friendly (ages ~7–12)
+
+- **No timer** — explore and plan at your own pace.
+- **5 lives**, and a death only sends Penny back to the start of the *current*
+  level with her collected treats kept — squirrels reset and she reappears with
+  a second of invulnerability.
+- **Running out of lives retries the same level** with fresh lives (you're
+  never thrown back to Level 1), and your score carries over.
+- **Penny is faster than every squirrel** (and Level 1's lone squirrel is
+  extra slow), so you can always outrun them on open ground.
+- Every level is provably completable with basic moving and climbing — no
+  digging required — and no treat can be permanently stranded (see
+  `tools/validate-levels.mjs`).
+
 ## Development
 
 - Everything is hand-rolled in `game.js` — pixel-art sprites defined as

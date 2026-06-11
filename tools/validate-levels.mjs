@@ -90,6 +90,22 @@ for (const L of LEVELS) {
   }
   for (const k of seen)
     if (!canFinish.has(k)) fail(`softlock: spot at (col,row) ${k} cannot get back to the family`);
-  if (!failed) console.log(`  OK — ${treats.length} treats, all reachable`);
+
+  // no-stranding check: every treat must be mutually reachable (in the spawn's
+  // strongly-connected component), so no collection order can leave one
+  // permanently out of reach — important for younger players.
+  const spawnKey = settle(...start).join();
+  const canReachSpawn = new Set([spawnKey]), q3 = [spawnKey];
+  while (q3.length) {
+    const k = q3.shift();
+    for (const p of edges.get(k) || [])  // edges is the reversed graph
+      if (!canReachSpawn.has(p)) { canReachSpawn.add(p); q3.push(p); }
+  }
+  for (const [c, r] of treats) {
+    const k = `${c},${r}`;
+    if (seen.has(k) && !canReachSpawn.has(k))
+      fail(`treat at col ${c}, row ${r} is strandable (one-way: can be reached but not left)`);
+  }
+  if (!failed) console.log(`  OK — ${treats.length} treats, all reachable & none strandable`);
 }
 process.exit(anyFailed ? 1 : 0);

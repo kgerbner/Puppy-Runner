@@ -14,7 +14,8 @@ const W = COLS * T, H = ROWS * T + HUD;      // canvas size
 const PENNY_SPEED  = 92;     // px/s walking
 const CLIMB_SPEED  = 78;
 const FALL_SPEED   = 168;
-const SQRL_SPEED   = 64;
+const SQRL_SPEED   = 54;     // squirrels are clearly slower than Penny (92) so she can outrun them
+const LIVES_START  = 5;
 const DIG_TIME     = 0.34;   // s, penny locked while digging
 const HOLE_LIFE    = 5.2;    // s before a hole refills
 const HOLE_WARN    = 4.0;    // s, when refill flicker starts
@@ -108,7 +109,8 @@ const PAL = {
   p: '#ff8fb2', g: '#7e8498', G: '#555a6a', r: '#a3552c', e: '#22222a',
   y: '#ffd23e', b: '#5ec8e8', m: '#ff4fa3', v: '#7e5bef', n: '#274060',
   s: '#f2c894', h: '#ff6b81',
-  L: '#c08a4a', D: '#43291a', // kids' hair: light brown / dark brown
+  L: '#946330', D: '#43291a', // kids' hair: (darker) light brown / dark brown
+  f: '#c98a52', // freckles
 };
 
 // Penny, facing right. 16 x 12.
@@ -251,10 +253,10 @@ const FAMILY = [[
   '..LLLLLLL..DDDDDD...........',
   '..LsssssL.DDDDDDDD..........',
   '..LkssksL.DssssssD..DDDDDD..',
-  '..LsshssL.DskskssD..DssssD..',
-  '..LsssssL.DsshhssD..skssks..',
-  '..LLsssLL.DDssssDD..sshhss..',
-  '..LmmmmmL.DyyyyyyD..bbbbbb..',
+  '..LsshssL.DskfkssD..DssssD..',
+  '..LsssssL.DfshhsfD..skssks..',
+  '..LsssssL.DDssssDD..sshhss..',
+  '..mmmmmmm.DyyyyyyD..bbbbbb..',
   '..mmmmmmm.DyyyyyyD..bbbbbb..',
   'vvvvvvvvvvvvvvvvvvvvvvvvvvvv',
   'vvvvvvvvvnvvvvvvvvnvvvvvvvvv',
@@ -341,7 +343,7 @@ cx.imageSmoothingEnabled = false;
 
 let state = 'title';          // title | intro | play | snuggle | dead | gameover | win
 let stateT = 0;               // time in current state
-let level = 0, score = 0, lives = 3, hiscore = 0;
+let level = 0, score = 0, lives = LIVES_START, hiscore = 0;
 let grid = [], holes = new Map(), treats = [], squirrels = [];
 let penny = null, family = { x: 0, y: 0 };
 let exitOpen = false, popups = [], hearts = [], confetti = [];
@@ -355,7 +357,8 @@ addEventListener('keydown', e => {
   audio();
   if (e.key.toLowerCase() === 'm') muted = !muted;
   if (e.key === 'Enter') {
-    if (state === 'title' || state === 'gameover' || state === 'win') startGame();
+    if (state === 'gameover') retryLevel();           // kids: retry the SAME level, fresh lives
+    else if (state === 'title' || state === 'win') startGame();
   }
   if (e.key.toLowerCase() === 'r' && state === 'play') loseLife(true);
 });
@@ -409,7 +412,15 @@ function makeSquirrel(c, r, slow) {
 }
 
 function startGame() {
-  level = 0; score = 0; lives = 3;
+  level = 0; score = 0; lives = LIVES_START;
+  loadLevel(level);
+  setState('intro');
+  SFX.start();
+}
+// On game over, kids retry the SAME level with fresh lives (keeping their score)
+// instead of being thrown all the way back to Level 1.
+function retryLevel() {
+  lives = LIVES_START;
   loadLevel(level);
   setState('intro');
   SFX.start();
@@ -1045,11 +1056,11 @@ function draw() {
   } else if (state === 'gameover') {
     drawWorld(); drawHUD();
     cx.fillStyle = 'rgba(13,6,38,0.85)'; cx.fillRect(0, 0, W, H);
-    rainbowText('GAME OVER', W / 2, H / 2 - 40, 48);
-    chunkyText('PENNY NEEDS A NAP... SHE IS STILL A VERY GOOD DOG', W / 2, H / 2 + 8, 12, '#fdf6e7');
-    chunkyText(`FINAL SCORE ${score}`, W / 2, H / 2 + 34, 14, '#ffe14d');
+    rainbowText('OUT OF LIVES!', W / 2, H / 2 - 40, 44);
+    chunkyText('PENNY NEEDS A QUICK NAP... SHE IS STILL A VERY GOOD DOG', W / 2, H / 2 + 8, 12, '#fdf6e7');
+    chunkyText(`SCORE ${score}`, W / 2, H / 2 + 34, 14, '#ffe14d');
     if (Math.floor(stateT * 2) % 2 === 0)
-      chunkyText('- PRESS ENTER -', W / 2, H / 2 + 70, 14, '#21d3ee');
+      chunkyText(`- PRESS ENTER TO TRY ${LEVELS[level].name.split(':')[0]} AGAIN -`, W / 2, H / 2 + 70, 13, '#21d3ee');
   } else if (state === 'win') {
     drawTitle();
     cx.fillStyle = 'rgba(13,6,38,0.75)'; cx.fillRect(0, 80, W, 260);
