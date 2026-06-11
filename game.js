@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v1.7';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v1.8';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -496,7 +496,14 @@ function moveActor(a, lr, ud, speed, dt) {
   }
 
   // --- drop from a bar ---
-  if (a.onBar && ud > 0) { a.onBar = false; a.falling = true; return; }
+  if (a.onBar && ud > 0) {
+    a.onBar = false;
+    if (!solid(c, r + 1)) {            // clear the bar's re-catch zone so she actually falls through
+      a.falling = true;
+      a.y = center(r) + T * 0.55;
+    }
+    return;
+  }
 
   // --- walking / hanging traversal ---
   if (lr !== 0) {
