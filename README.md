@@ -28,11 +28,13 @@ Open `index.html` in any modern browser. No build step, no dependencies.
 ## The rules of being a good dog
 
 - **Treats** — collect every biscuit on the level. 100 points apiece.
-- **Squirrels** — they roam the level chasing Penny and swipe unattended
-  treats. **They are not friends: one touch costs Penny a life** (classic
-  Lode Runner). Penny is faster than they are on open ground, so kite them —
-  and the HUD flashes a warning when one gets close. Level 1's squirrel is
-  slow, to ease you in. Penny gets a brief flash of invulnerability each time
+  Squirrels can't take them; every treat stays where it is until Penny
+  eats it.
+- **Squirrels** — they roam the level chasing Penny. **They are not
+  friends: one touch costs Penny a life** (classic Lode Runner). Penny is
+  much faster than they are on open ground, so kite them — and the HUD
+  flashes a warning when one gets close. Squirrels are slowest on Level 1,
+  to ease you in. Penny gets a brief flash of invulnerability each time
   she (re)spawns.
 - **Digging** — bricks (pink) can be dug through, Lode Runner style. Drop a
   squirrel into a hole to trap it (+75) — you can safely run across a trapped

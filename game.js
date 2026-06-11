@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v1.6';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v1.7';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -410,7 +410,7 @@ function makeSquirrel(c, r, factor) {
     x: c * T + T / 2, y: r * T + T / 2, spawnC: c, spawnR: r,
     face: -1, anim: Math.random() * 9, falling: false, climbing: false,
     trapped: 0, scamperT: 0, thinkT: Math.random() * .2, lr: 0, ud: 0,
-    carrying: null, spd: SQRL_SPEED * factor,
+    spd: SQRL_SPEED * factor,
   };
 }
 
@@ -553,7 +553,6 @@ function updateHoles(dt) {
 
 /* ------------------------------ squirrels ------------------------------ */
 function respawnSquirrel(s) {
-  if (s.carrying) { s.carrying.c = s.spawnC; s.carrying.r = s.spawnR; s.carrying.held = false; s.carrying = null; }
   s.x = center(s.spawnC); s.y = center(s.spawnR);
   s.trapped = 0; s.falling = false; s.climbing = false; s.onBar = false; s.scamperT = 0;
 }
@@ -589,7 +588,6 @@ function updateSquirrel(s, dt) {
     s.trapped = TRAP_TIME;
     award(75, s.x, s.y - 14, 'GOTCHA!');
     SFX.trap();
-    if (s.carrying) { s.carrying.c = c; s.carrying.r = r - 1; s.carrying.held = false; s.carrying = null; }
     return;
   }
 
@@ -616,16 +614,6 @@ function updateSquirrel(s, dt) {
   const ox = s.x;
   moveActor(s, s.lr, s.ud, speed, dt);
   if (s.lr !== 0 && Math.abs(s.x - ox) < 0.01 && !s.falling) s.face *= -1; // bonked a wall
-
-  // pick up treats it scurries over (sneaky!)
-  if (!s.carrying && !s.falling) {
-    for (const t of treats) {
-      if (!t.got && !t.held && t.c === colOf(s) && t.r === rowOf(s) && Math.random() < 0.02) {
-        t.held = true; s.carrying = t;
-        award(0, s.x, s.y - 14, 'HEY! MY TREAT!');
-      }
-    }
-  }
 }
 function supportedSq(s) { return solid(colOf(s), rowOf(s) + 1) || tile(colOf(s), rowOf(s)) === 'H'; }
 
@@ -702,7 +690,6 @@ function updatePlay(dt) {
   let left = 0;
   for (const t of treats) {
     if (t.got) continue;
-    if (t.held) { left++; continue; }
     left++;
     if (colOf(penny) === t.c && rowOf(penny) === t.r) {
       t.got = true; left--;
@@ -898,12 +885,11 @@ function drawSquirrel(s) {
   if (s.trapped > 0) dy += 6; // sunk in the hole
   cx.drawImage(img, px(s.x - img.width / 2), px(dy));
   if (s.trapped > 0) chunkyText('!', px(s.x), px(dy - 8), 12, '#ffe14d');
-  if (s.carrying) cx.drawImage(SPR.treat, px(s.x - 8), px(dy - 10), 16, 11);
 }
 
 function drawTreats() {
   for (const t of treats) {
-    if (t.got || t.held) continue;
+    if (t.got) continue;
     const bob = Math.sin(stateT * 4 + t.c) * 1.5;
     cx.drawImage(SPR.treat, px(t.c * T + T / 2 - SPR.treat.width / 2),
                  px(HUD + t.r * T + T - SPR.treat.height - 2 + bob));
