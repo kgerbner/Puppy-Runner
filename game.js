@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v2.3';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v2.4';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -275,37 +275,41 @@ const TREAT = [[
   '.oo....oo.',
 ]];
 
-// Poconos black bear, facing left. 18 x 14. Big and slow.
+// Poconos black bear, STANDING upright, facing left. 12 x 16. Big and slow.
 const BEAR = [[
-  '...UU.........UU..',
-  '..UBBU.......UBBU.',
-  '..UBBBUUUUUUUBBBU.',
-  '.UBBBBBBBBBBBBBBU.',
-  '.UBBBBBBBBBBBBBBU.',
-  'UBkwBBBBBBBBkwBBU.',
-  'UBBBBBBBBBBBBBBBU.',
-  'sssUBBBBBBBBBBBBU.',
-  'skkssBBBBBBBBBBBU.',
-  'sssUBBBBBBBBBBBBU.',
-  '.UBBBBBBBBBBBBBBU.',
-  '.UBBUBBBUUBBBUBBU.',
-  '.UBBU.UBBU.UBBU.U.',
-  '..UU...UU...UU....',
+  '.UU.....UU..',
+  '.UBU...UBU..',
+  '.UBBUUUBBBU.',
+  'UBBBBBBBBBU.',
+  'UkwBBBBkwBU.',
+  'UBBBBBBBBBU.',
+  'sskBBBBBBBU.',
+  'sssBBBBBBBU.',
+  '.UBBBBBBBU..',
+  'UBBBBBBBBBBU',
+  'UBBBBBBBBBBU',
+  '.UBBBBBBBU..',
+  '.UBBBBBBBU..',
+  '.UBBUUBBBU..',
+  '.UBU..UBU...',
+  '.UU....UU...',
 ], [
-  '...UU.........UU..',
-  '..UBBU.......UBBU.',
-  '..UBBBUUUUUUUBBBU.',
-  '.UBBBBBBBBBBBBBBU.',
-  '.UBBBBBBBBBBBBBBU.',
-  'UBkwBBBBBBBBkwBBU.',
-  'UBBBBBBBBBBBBBBBU.',
-  'sssUBBBBBBBBBBBBU.',
-  'skkssBBBBBBBBBBBU.',
-  'sssUBBBBBBBBBBBBU.',
-  '.UBBBBBBBBBBBBBBU.',
-  '.UBBBUBBUUBBUBBBU.',
-  '..UBBU.UBBU.UBBU..',
-  '...UU...UU...UU...',
+  '.UU.....UU..',
+  '.UBU...UBU..',
+  '.UBBUUUBBBU.',
+  'UBBBBBBBBBU.',
+  'UkwBBBBkwBU.',
+  'UBBBBBBBBBU.',
+  'sskBBBBBBBU.',
+  'sssBBBBBBBU.',
+  '.UBBBBBBBU..',
+  'UBBBBBBBBBBU',
+  'UBBBBBBBBBBU',
+  '.UBBBBBBBU..',
+  '.UBBBBBBBU..',
+  '.UBBUUBBBU..',
+  '..UBU.UBU...',
+  '..UU..UU....',
 ]];
 
 // Acorn nut pickup. 8 x 8.
@@ -505,7 +509,7 @@ function makeBear(c, r) {
     x: c * T + T / 2, y: r * T + T / 2, spawnC: c, spawnR: r,
     face: -1, anim: Math.random() * 9, falling: false, climbing: false,
     trapped: 0, scamperT: 0, thinkT: Math.random() * .2, lr: 0, ud: 0,
-    spd: BEAR_SPEED, fleeT: 0, eatT: 0, isBear: true,
+    spd: BEAR_SPEED, climbSpd: BEAR_SPEED * 1.5, fleeT: 0, eatT: 0, isBear: true,
   };
 }
 
@@ -572,7 +576,7 @@ function moveActor(a, lr, ud, speed, dt) {
     const cc = center(c);
     if (Math.abs(a.x - cc) > 1) { a.x += Math.sign(cc - a.x) * Math.min(speed * dt, Math.abs(a.x - cc)); return; }
     a.climbing = true; a.onBar = false;
-    const ny = a.y + ud * CLIMB_SPEED * dt;
+    const ny = a.y + ud * (a.climbSpd || CLIMB_SPEED) * dt;
     const nr = Math.floor(ny / T);
     if (ud < 0) { // up
       if (tile(c, r) !== 'H' && tile(c, r - 1) !== 'H') return;   // not on a ladder
@@ -742,9 +746,8 @@ function updateSquirrel(s, dt) {
     s.thinkT = 0.18 + Math.random() * 0.1;
     const pc = colOf(penny), pr = rowOf(penny);
     s.lr = 0; s.ud = 0;
-    if (s.isBear) { s.lr = Math.sign(penny.x - s.x) || s.lr || 1; } // bears never climb - lumber toward Penny
-    else if (s.scamperT > 0) { s.lr = s.face; }
-    else if (Math.random() < 0.06) { s.lr = Math.random() < 0.5 ? -1 : 1; } // squirrel brain
+    if (s.scamperT > 0) { s.lr = s.face; }
+    else if (!s.isBear && Math.random() < 0.06) { s.lr = Math.random() < 0.5 ? -1 : 1; } // squirrel brain
     else if (pr < r && tile(c, r) === 'H' && !solid(c, r - 1)) s.ud = -1;
     else if (pr > r && (tile(c, r + 1) === 'H' || (tile(c, r) === 'H' && !solid(c, r + 1)))) s.ud = 1;
     else if (pr === r) s.lr = Math.sign(penny.x - s.x) || 1;
@@ -1005,6 +1008,23 @@ function drawLakeBG() {
   }
 }
 
+// A wooden dock jutting out over the lake on the right, where the family waits.
+function drawDock() {
+  const deckTop = H - 26, x0 = Math.round(W * 0.54), x1 = W;
+  // support posts down into the water
+  cx.fillStyle = '#5e3c20';
+  for (let xp = x0 + 14; xp < x1 - 6; xp += 38) cx.fillRect(xp, deckTop, 7, 26);
+  // deck planks
+  cx.fillStyle = '#9a7a50'; cx.fillRect(x0, deckTop - 9, x1 - x0, 12);
+  cx.fillStyle = '#b08f60'; cx.fillRect(x0, deckTop - 9, x1 - x0, 3);
+  cx.fillStyle = '#6b4a2f';
+  for (let xs = x0; xs < x1; xs += 18) cx.fillRect(xs, deckTop - 9, 1, 12); // plank seams
+  // two pilings poking up at the lake end
+  cx.fillStyle = '#6b4a2f';
+  cx.fillRect(x0 + 2, deckTop - 22, 7, 15);
+  cx.fillRect(x0 + 1, deckTop - 25, 9, 4);
+}
+
 function drawTile(c, r) {
   const ch = rawTile(c, r);
   const x = c * T, y = HUD + r * T;
@@ -1263,6 +1283,7 @@ function drawWorld() {
   for (let r = 0; r < ROWS; r++)
     for (let c = 0; c < COLS; c++)
       drawTile(c, r);
+  if (LEVELS[level] && LEVELS[level].theme === 'lake') drawDock();
   drawFamily();
   drawTreats();
   for (const s of squirrels) drawSquirrel(s);

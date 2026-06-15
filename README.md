@@ -43,11 +43,12 @@ Open `index.html` in any modern browser. No build step, no dependencies.
   prize (+50) and sits down to munch for a good while — completely harmless
   until it finishes eating. If no squirrel is close enough, Penny keeps the
   nut.
-- **The bear** (Level 4) — a Poconos black bear lumbers along the ground. It's
-  **lethal on contact like the squirrels, but it can't be bribed** — nuts do
-  nothing to a bear. It's slow and can't climb ladders, so outrun it, change
-  floors to escape it, or drop it in a hole (+200). It is the only thing in the
-  game a nut won't solve.
+- **The bear** (Level 4) — a Poconos black bear that lumbers after Penny and
+  **climbs ladders** to follow her between floors. It's **lethal on contact like
+  the squirrels, but it can't be bribed** — nuts do nothing to a bear. It's slow
+  on the ground and climbs slowly too, so Penny can always outrun it; lose it on
+  the flats, or drop it in a hole (+200). It is the only thing in the game a nut
+  won't solve.
 - **Digging** — bricks (pink) can be dug through, Lode Runner style. Drop a
   squirrel into a hole to trap it (+75, +200 for the bear) — you can safely run
   across a trapped enemy's head. Holes refill after a few seconds, so don't get
