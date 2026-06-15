@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v2.2';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v2.3';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -16,6 +16,7 @@ const PENNY_SPEED  = 92;     // px/s walking
 const CLIMB_SPEED  = 78;
 const FALL_SPEED   = 168;
 const SQRL_SPEED   = 54;     // squirrels are clearly slower than Penny (92) so she can outrun them
+const BEAR_SPEED   = 30;     // the bear lumbers - lethal but easy to outrun (and can't climb)
 const LIVES_START  = 5;
 const DIG_TIME     = 0.34;   // s, penny locked while digging
 const HOLE_LIFE    = 5.2;    // s before a hole refills
@@ -107,6 +108,30 @@ const LEVELS = [
       '============================',
     ],
   },
+  {
+    name: 'LEVEL 4: POCONOS LAKE',
+    tip: 'A BEAR! It is slow but deadly - nuts will not work. Dodge it or dig a hole!',
+    sqSpeed: 0.66,
+    theme: 'lake',
+    map: [
+      '............................',
+      '............................',
+      '............................',
+      '......H...t....n.....H......',
+      '######H##############H######',
+      '......H..............H......',
+      '......H--------------H......',
+      '......H.....t........H......',
+      '######H##############H######',
+      '......H..............H......',
+      '......H..t.......t...H......',
+      '######H##############H######',
+      '......H..............H......',
+      '......H..............H......',
+      '.P.n..H..s...b.t..s..H....F.',
+      '============================',
+    ],
+  },
 ];
 
 /* ------------------------------ pixel art ------------------------------ */
@@ -118,6 +143,7 @@ const PAL = {
   s: '#f2c894', h: '#ff6b81',
   L: '#946330', D: '#43291a', // kids' hair: (darker) light brown / dark brown
   f: '#c98a52', // freckles
+  B: '#8a5a32', U: '#5e3c20', // bear: brown / dark brown shading
 };
 
 // Penny, facing right. 16 x 12.
@@ -249,6 +275,39 @@ const TREAT = [[
   '.oo....oo.',
 ]];
 
+// Poconos black bear, facing left. 18 x 14. Big and slow.
+const BEAR = [[
+  '...UU.........UU..',
+  '..UBBU.......UBBU.',
+  '..UBBBUUUUUUUBBBU.',
+  '.UBBBBBBBBBBBBBBU.',
+  '.UBBBBBBBBBBBBBBU.',
+  'UBkwBBBBBBBBkwBBU.',
+  'UBBBBBBBBBBBBBBBU.',
+  'sssUBBBBBBBBBBBBU.',
+  'skkssBBBBBBBBBBBU.',
+  'sssUBBBBBBBBBBBBU.',
+  '.UBBBBBBBBBBBBBBU.',
+  '.UBBUBBBUUBBBUBBU.',
+  '.UBBU.UBBU.UBBU.U.',
+  '..UU...UU...UU....',
+], [
+  '...UU.........UU..',
+  '..UBBU.......UBBU.',
+  '..UBBBUUUUUUUBBBU.',
+  '.UBBBBBBBBBBBBBBU.',
+  '.UBBBBBBBBBBBBBBU.',
+  'UBkwBBBBBBBBkwBBU.',
+  'UBBBBBBBBBBBBBBBU.',
+  'sssUBBBBBBBBBBBBU.',
+  'skkssBBBBBBBBBBBU.',
+  'sssUBBBBBBBBBBBBU.',
+  '.UBBBBBBBBBBBBBBU.',
+  '.UBBBUBBUUBBUBBBU.',
+  '..UBBU.UBBU.UBBU..',
+  '...UU...UU...UU...',
+]];
+
 // Acorn nut pickup. 8 x 8.
 const NUT = [[
   '...DD...',
@@ -320,6 +379,8 @@ function buildSprites() {
   SPR.sit    = buildSprite(PENNY_SIT[0], 2.2);
   SPR.sqrlL  = SQRL.map(f => buildSprite(f, 1.5));
   SPR.sqrlR  = SPR.sqrlL.map(flipSprite);
+  SPR.bearL  = BEAR.map(f => buildSprite(f, 1.7));
+  SPR.bearR  = SPR.bearL.map(flipSprite);
   SPR.treat  = buildSprite(TREAT[0], 1.6);
   SPR.nut    = buildSprite(NUT[0], 1.7);
   SPR.family = buildSprite(FAMILY[0], 2.0);
@@ -366,7 +427,7 @@ cx.imageSmoothingEnabled = false;
 let state = 'title';          // title | intro | play | snuggle | dead | gameover | win
 let stateT = 0;               // time in current state
 let level = 0, score = 0, lives = LIVES_START, hiscore = 0;
-let grid = [], holes = new Map(), treats = [], nuts = [], squirrels = [];
+let grid = [], holes = new Map(), treats = [], nuts = [], squirrels = [], bears = [];
 let penny = null, family = { x: 0, y: 0 };
 let exitOpen = false, popups = [], hearts = [], confetti = [];
 let nutHintShown = false;   // teach SPACE the first time Penny pockets a nut
@@ -382,6 +443,10 @@ addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     if (state === 'gameover') retryLevel();           // kids: retry the SAME level, fresh lives
     else if (state === 'title' || state === 'win') startGame();
+  }
+  // title-screen level select: press 1-4 to jump straight to a level
+  if ((state === 'title' || state === 'win') && e.key >= '1' && e.key <= String(LEVELS.length)) {
+    startGame(); level = +e.key - 1; lives = LIVES_START; score = 0; loadLevel(level); setState('intro');
   }
   if (e.key.toLowerCase() === 'r' && state === 'play') loseLife(true);
 });
@@ -402,7 +467,7 @@ function solid(c, r) { const ch = tile(c, r); return ch === '#' || ch === '='; }
 
 function loadLevel(n) {
   const L = LEVELS[n];
-  grid = []; holes.clear(); treats = []; nuts = []; squirrels = [];
+  grid = []; holes.clear(); treats = []; nuts = []; squirrels = []; bears = [];
   exitOpen = false; popups = []; hearts = []; levelTime = 0;
   for (let r = 0; r < ROWS; r++) {
     const row = [];
@@ -412,6 +477,7 @@ function loadLevel(n) {
       else if (ch === 'n') { nuts.push({ c, r, got: false }); ch = '.'; }
       else if (ch === 'P') { penny = makePenny(c, r); ch = '.'; }
       else if (ch === 's') { squirrels.push(makeSquirrel(c, r, L.sqSpeed ?? 1)); ch = '.'; } // per-level squirrel speed
+      else if (ch === 'b') { bears.push(makeBear(c, r)); ch = '.'; }
       else if (ch === 'F') { family = { c, r, x: c * T + T / 2, y: r * T + T / 2 }; ch = '.'; }
       row.push(ch);
     }
@@ -432,6 +498,14 @@ function makeSquirrel(c, r, factor) {
     face: -1, anim: Math.random() * 9, falling: false, climbing: false,
     trapped: 0, scamperT: 0, thinkT: Math.random() * .2, lr: 0, ud: 0,
     spd: SQRL_SPEED * factor, fleeT: 0, eatT: 0,
+  };
+}
+function makeBear(c, r) {
+  return {
+    x: c * T + T / 2, y: r * T + T / 2, spawnC: c, spawnR: r,
+    face: -1, anim: Math.random() * 9, falling: false, climbing: false,
+    trapped: 0, scamperT: 0, thinkT: Math.random() * .2, lr: 0, ud: 0,
+    spd: BEAR_SPEED, fleeT: 0, eatT: 0, isBear: true,
   };
 }
 
@@ -576,8 +650,10 @@ function giveNut() {
     const d = Math.hypot(s.x - penny.x, s.y - penny.y);
     if (d < bd) { bd = d; best = s; }
   }
-  if (!best) {                       // nobody close enough: keep the nut
-    award(0, penny.x, penny.y - 18, 'NO SQUIRREL NEAR!');
+  if (!best) {                       // no squirrel close enough: keep the nut
+    let bearNear = false;
+    for (const bb of bears) if (bb.trapped <= 0 && Math.hypot(bb.x - penny.x, bb.y - penny.y) < NUT_RANGE) bearNear = true;
+    award(0, penny.x, penny.y - 18, bearNear ? "BEARS DON'T WANT NUTS!" : 'NO SQUIRREL NEAR!');
     return;
   }
   penny.nuts--;
@@ -597,7 +673,7 @@ function updateHoles(dt) {
       SFX.fill();
       // anyone inside?
       if (colOf(penny) === h.c && rowOf(penny) === h.r && state === 'play') loseLife(false);
-      for (const s of squirrels) {
+      for (const s of [...squirrels, ...bears]) {
         if (colOf(s) === h.c && rowOf(s) === h.r) respawnSquirrel(s);
       }
     }
@@ -641,7 +717,7 @@ function updateSquirrel(s, dt) {
   if (holes.has(key(c, r)) && !s.falling && supportedSq(s)) {
     s.trapped = TRAP_TIME;
     s.fleeT = 0; s.eatT = 0;
-    award(75, s.x, s.y - 14, 'GOTCHA!');
+    award(s.isBear ? 200 : 75, s.x, s.y - 14, s.isBear ? 'BEAR TRAPPED!' : 'GOTCHA!');
     SFX.trap();
     return;
   }
@@ -666,7 +742,8 @@ function updateSquirrel(s, dt) {
     s.thinkT = 0.18 + Math.random() * 0.1;
     const pc = colOf(penny), pr = rowOf(penny);
     s.lr = 0; s.ud = 0;
-    if (s.scamperT > 0) { s.lr = s.face; }
+    if (s.isBear) { s.lr = Math.sign(penny.x - s.x) || s.lr || 1; } // bears never climb - lumber toward Penny
+    else if (s.scamperT > 0) { s.lr = s.face; }
     else if (Math.random() < 0.06) { s.lr = Math.random() < 0.5 ? -1 : 1; } // squirrel brain
     else if (pr < r && tile(c, r) === 'H' && !solid(c, r - 1)) s.ud = -1;
     else if (pr > r && (tile(c, r + 1) === 'H' || (tile(c, r) === 'H' && !solid(c, r + 1)))) s.ud = 1;
@@ -719,7 +796,7 @@ function respawnPenny() {
   penny.x = center(penny.spawnC); penny.y = center(penny.spawnR);
   penny.falling = false; penny.onBar = false; penny.climbing = false;
   penny.invuln = SPAWN_INVULN;
-  for (const s of squirrels) respawnSquirrel(s);
+  for (const s of [...squirrels, ...bears]) respawnSquirrel(s);
 }
 
 /* -------------------------------- update ------------------------------- */
@@ -743,14 +820,16 @@ function updatePlay(dt) {
   else moveActor(penny, lr, ud, PENNY_SPEED, dt);
   penny.tailWag += dt * (lr !== 0 ? 14 : 6);
 
-  // --- squirrels ---
+  // --- squirrels and the bear ---
   for (const s of squirrels) updateSquirrel(s, dt);
+  for (const b of bears) updateSquirrel(b, dt);
 
-  // --- a squirrel catches Penny: lose a life (Lode Runner style) ---
+  // --- a squirrel or bear catches Penny: lose a life (Lode Runner style) ---
   if (penny.invuln <= 0) {
-    for (const s of squirrels) {
+    for (const s of [...squirrels, ...bears]) {
       if (s.trapped > 0 || s.fleeT > 0 || s.eatT > 0) continue; // trapped or bribed = harmless
-      if (Math.abs(s.x - penny.x) < 14 && Math.abs(s.y - penny.y) < 14) {
+      const reach = s.isBear ? 17 : 14; // the bear's hug has a wider reach
+      if (Math.abs(s.x - penny.x) < reach && Math.abs(s.y - penny.y) < reach) {
         loseLife(false);
         return; // state changed to dead/gameover
       }
@@ -863,6 +942,7 @@ function rainbowText(txt, x, y, size) {
 }
 
 function drawBG() {
+  if (LEVELS[level] && LEVELS[level].theme === 'lake') { drawLakeBG(); return; }
   // bright 90s pastel backdrop — keeps a mostly-black dog visible
   const g = cx.createLinearGradient(0, HUD, 0, H);
   g.addColorStop(0, '#fff3df'); g.addColorStop(0.55, '#ffe2ee'); g.addColorStop(1, '#e3f2ec');
@@ -888,6 +968,40 @@ function drawBG() {
     else if (i % 3 === 1) { cx.beginPath(); cx.arc(0, 0, 3.4, 0, 7); cx.fill(); }
     else { cx.beginPath(); cx.moveTo(0, -4); cx.lineTo(4, 3); cx.lineTo(-4, 3); cx.fill(); }
     cx.restore();
+  }
+}
+
+// Poconos lakeside backdrop: pale sky, pine-covered ridges, a glittering lake.
+// Kept light so a black-and-tan dog still pops.
+function drawLakeBG() {
+  const g = cx.createLinearGradient(0, HUD, 0, H);
+  g.addColorStop(0, '#dff1fb'); g.addColorStop(0.5, '#cfeaf6'); g.addColorStop(0.62, '#bfe6f2'); g.addColorStop(1, '#8fd3e6');
+  cx.fillStyle = g; cx.fillRect(0, HUD, W, H - HUD);
+  // sun
+  cx.fillStyle = 'rgba(255,239,170,0.8)';
+  cx.beginPath(); cx.arc(W - 70, HUD + 46, 22, 0, 7); cx.fill();
+  // distant blue mountain ridge
+  cx.fillStyle = '#a9c4d6';
+  cx.beginPath(); cx.moveTo(0, HUD + 120);
+  for (let x = 0; x <= W; x += 48) cx.lineTo(x, HUD + 92 + ((x / 48) % 2 ? 22 : 0));
+  cx.lineTo(W, HUD + 160); cx.lineTo(0, HUD + 160); cx.fill();
+  // pine tree line (deterministic)
+  for (let i = 0; i < 30; i++) {
+    const tx = (i * 113) % W, base = HUD + 150 + ((i * 37) % 18);
+    const h = 26 + ((i * 53) % 16), w = 9 + ((i * 29) % 5);
+    cx.fillStyle = i % 2 ? '#2f7a4f' : '#256b45';
+    cx.beginPath();
+    cx.moveTo(tx, base - h); cx.lineTo(tx - w, base); cx.lineTo(tx + w, base); cx.fill();
+    cx.beginPath();
+    cx.moveTo(tx, base - h - 8); cx.lineTo(tx - w * 0.7, base - h * 0.4); cx.lineTo(tx + w * 0.7, base - h * 0.4); cx.fill();
+  }
+  // lake band with sparkles near the bottom
+  cx.fillStyle = 'rgba(110,200,230,0.35)';
+  cx.fillRect(0, H - 90, W, 90);
+  for (let i = 0; i < 22; i++) {
+    const sx = (i * 89) % W, sy = H - 78 + ((i * 41) % 60);
+    cx.fillStyle = 'rgba(255,255,255,0.5)';
+    cx.fillRect(sx, sy, 6, 1);
   }
 }
 
@@ -977,6 +1091,14 @@ function drawSquirrel(s) {
   }
 }
 
+function drawBear(b) {
+  const img = (b.face < 0 ? SPR.bearL : SPR.bearR)[Math.floor(b.anim) % 2];
+  let dy = HUD + b.y - img.height + T / 2;
+  if (b.trapped > 0) dy += 8; // sunk in the hole
+  cx.drawImage(img, px(b.x - img.width / 2), px(dy));
+  if (b.trapped > 0) chunkyText('!', px(b.x), px(dy - 8), 12, '#ffe14d');
+}
+
 function drawTreats() {
   for (const t of treats) {
     if (t.got) continue;
@@ -1034,22 +1156,27 @@ function drawHUD() {
   cx.drawImage(SPR.nut, 386, 6, 15, 15);
   chunkyText(`x ${penny ? penny.nuts : 0}`, 424, 16, 13, '#d59247');
   chunkyText('SPACE = GIVE NUT', 300, 35, 9, '#d59247', 'left');
-  // squirrel danger warning: nearest active squirrel
-  let near = 1e9;
+  // danger warning: nearest active squirrel / bear
+  let near = 1e9, bearNear = false;
   for (const s of squirrels) {
     if (s.trapped > 0 || s.fleeT > 0 || s.eatT > 0) continue;
     near = Math.min(near, Math.hypot(s.x - penny.x, s.y - penny.y));
   }
+  for (const b of bears) {
+    if (b.trapped > 0) continue;
+    const d = Math.hypot(b.x - penny.x, b.y - penny.y);
+    if (d < near) { near = d; if (d < SQRL_WARN) bearNear = true; }
+  }
   const haveNuts = penny && penny.nuts > 0;
-  cx.drawImage(SPR.sqrlL[0], 470, 14, 24, 19);
+  cx.drawImage(bearNear ? SPR.bearL[0] : SPR.sqrlL[0], 470, bearNear ? 18 : 14, bearNear ? 28 : 24, bearNear ? 22 : 19);
   if (near < SQRL_WARN) {
     // steady text, gentle 1s colour pulse — urgent but not strobing
     const hot = Math.floor(frame / 30) % 2;
-    chunkyText('!! SQUIRREL !!', 588, 16, 11, hot ? '#ff4fa3' : '#ff8fb2');
-    chunkyText(haveNuts ? 'SPACE: GIVE A NUT!' : 'RUN, OR TRAP IT!', 588, 35, 9, '#ffe14d');
+    chunkyText(bearNear ? '!! BEAR !!' : '!! SQUIRREL !!', 588, 16, 11, hot ? '#ff4fa3' : '#ff8fb2');
+    chunkyText(bearNear ? 'RUN! BEARS LOVE HOLES' : (haveNuts ? 'SPACE: GIVE A NUT!' : 'RUN, OR TRAP IT!'), 588, 35, 9, '#ffe14d');
   } else {
-    chunkyText('AVOID SQUIRRELS', 588, 16, 10, '#ff8fb2');
-    chunkyText('OR BRIBE WITH A NUT', 588, 35, 9, '#9aa0ab');
+    chunkyText(bears.length ? 'WATCH FOR THE BEAR' : 'AVOID SQUIRRELS', 588, 16, 10, '#ff8fb2');
+    chunkyText(bears.length ? 'DODGE IT OR TRAP IT' : 'OR BRIBE WITH A NUT', 588, 35, 9, '#9aa0ab');
   }
   if (muted) chunkyText('MUTE', 760, 16, 9, '#9aa0ab');
   chunkyText(VERSION, W - 4, 40, 8, '#5a5470', 'right');
@@ -1124,8 +1251,9 @@ function drawTitle() {
   chunkyText('COLLECT EVERY TREAT, THEN RUN HOME TO SNUGGLE', W / 2, 338, 11, '#fdf6e7');
   chunkyText('DODGE SQUIRRELS! TRAP THEM IN HOLES, OR BRIBE THEM WITH NUTS', W / 2, 358, 11, '#ff8fb2');
   if (Math.floor(stateT * 2) % 2 === 0)
-    chunkyText('- PRESS ENTER TO PLAY -', W / 2, 392, 16, '#ffe14d');
-  chunkyText(`HI SCORE ${String(hiscore).padStart(6, '0')}`, W / 2, 412, 11, '#7e5bef');
+    chunkyText('- PRESS ENTER TO PLAY -', W / 2, 390, 16, '#ffe14d');
+  chunkyText(`PRESS 1-${LEVELS.length} TO PICK A LEVEL`, W / 2, 410, 9, '#7e5bef');
+  chunkyText(`HI SCORE ${String(hiscore).padStart(6, '0')}`, W / 2, 426, 11, '#7e5bef');
   chunkyText('© 1996 GOOD DOG SOFTWARE', W / 2, H - 6, 9, '#5a5470');
   chunkyText(VERSION, W - 8, H - 6, 9, '#5a5470', 'right');
 }
@@ -1138,6 +1266,7 @@ function drawWorld() {
   drawFamily();
   drawTreats();
   for (const s of squirrels) drawSquirrel(s);
+  for (const b of bears) drawBear(b);
   drawPenny();
   drawPopups();
 }

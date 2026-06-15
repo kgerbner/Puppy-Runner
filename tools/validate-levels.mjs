@@ -12,7 +12,7 @@ const m = src.match(/const LEVELS = \[[\s\S]*?\n\];/);
 if (!m) { console.error('could not find LEVELS in game.js'); process.exit(1); }
 const LEVELS = new Function(`${m[0].replace('const LEVELS =', 'return')}`)();
 
-const ROWS = 16, COLS = 28, LEGAL = new Set('#=H-tnsPF.'.split(''));
+const ROWS = 16, COLS = 28, LEGAL = new Set('#=H-tnsbPF.'.split(''));
 let anyFailed = false;
 
 for (const L of LEVELS) {

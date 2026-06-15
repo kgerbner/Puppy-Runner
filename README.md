@@ -25,6 +25,7 @@ Open `index.html` in any modern browser. No build step, no dependencies.
 | M | Mute |
 | R | Send Penny back to her start spot (costs a heart) |
 | Enter | Start |
+| 1–4 | Jump to a level (from the title screen) |
 
 ## The rules of being a good dog
 
@@ -42,15 +43,23 @@ Open `index.html` in any modern browser. No build step, no dependencies.
   prize (+50) and sits down to munch for a good while — completely harmless
   until it finishes eating. If no squirrel is close enough, Penny keeps the
   nut.
+- **The bear** (Level 4) — a Poconos black bear lumbers along the ground. It's
+  **lethal on contact like the squirrels, but it can't be bribed** — nuts do
+  nothing to a bear. It's slow and can't climb ladders, so outrun it, change
+  floors to escape it, or drop it in a hole (+200). It is the only thing in the
+  game a nut won't solve.
 - **Digging** — bricks (pink) can be dug through, Lode Runner style. Drop a
-  squirrel into a hole to trap it (+75) — you can safely run across a trapped
-  squirrel's head. Holes refill after a few seconds, so don't get caught in
-  one yourself; that costs a heart too.
+  squirrel into a hole to trap it (+75, +200 for the bear) — you can safely run
+  across a trapped enemy's head. Holes refill after a few seconds, so don't get
+  caught in one yourself; that costs a heart too.
 - **Snuggle time** — once the last treat is eaten the family calls from the
-  couch. Get there for the snuggle bonus (faster = bigger) and the next level.
+  couch (or the lakeside dock). Get there for the snuggle bonus (faster =
+  bigger) and the next level.
 
-Three levels: **Backyard Basics**, **Squirrel Park**, and **The Big Dig**.
-Finish all three to confirm what we already knew: Penny is a very good dog.
+Four levels: **Backyard Basics**, **Squirrel Park**, **The Big Dig**, and the
+Poconos-lakeside finale **Poconos Lake** (where the bear shows up). Press
+**1–4** on the title screen to jump straight to any level. Finish all four to
+confirm what we already knew: Penny is a very good dog.
 
 ### Made to be kid-friendly (ages ~7–12)
 
