@@ -57,10 +57,12 @@ Open `index.html` in any modern browser. No build step, no dependencies.
   couch (or the lakeside dock). Get there for the snuggle bonus (faster =
   bigger) and the next level.
 
-Four levels: **Backyard Basics**, **Squirrel Park**, **The Big Dig**, and the
-Poconos-lakeside finale **Poconos Lake** (where the bear shows up). Press
-**1–4** on the title screen to jump straight to any level. Finish all four to
-confirm what we already knew: Penny is a very good dog.
+Five levels: **Backyard Basics**, **Squirrel Park**, **The Big Dig**, the
+Poconos-lakeside **Poconos Lake** (where the bear shows up), and the finale
+**Gigi & Babu's House** — a cozy indoor room with 3 squirrels and a bear, where
+the whole family (grandparents Gigi & Babu *and* the three grandkids) waits.
+Press **1–5** on the title screen to jump straight to any level. Finish all five
+to confirm what we already knew: Penny is a very good dog.
 
 ### Made to be kid-friendly (ages ~7–12)
 

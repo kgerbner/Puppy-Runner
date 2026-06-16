@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v2.4';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v2.5';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -16,7 +16,7 @@ const PENNY_SPEED  = 92;     // px/s walking
 const CLIMB_SPEED  = 78;
 const FALL_SPEED   = 168;
 const SQRL_SPEED   = 54;     // squirrels are clearly slower than Penny (92) so she can outrun them
-const BEAR_SPEED   = 30;     // the bear lumbers - lethal but easy to outrun (and can't climb)
+const BEAR_SPEED   = 30;     // the bear lumbers - lethal, climbs slowly, but easy to outrun
 const LIVES_START  = 5;
 const DIG_TIME     = 0.34;   // s, penny locked while digging
 const HOLE_LIFE    = 5.2;    // s before a hole refills
@@ -132,6 +132,30 @@ const LEVELS = [
       '============================',
     ],
   },
+  {
+    name: "LEVEL 5: GIGI & BABU'S HOUSE",
+    tip: 'Run home to Gigi, Babu and the whole family! Mind the bear and 3 squirrels.',
+    sqSpeed: 0.66,
+    theme: 'home',
+    map: [
+      '............................',
+      '............................',
+      '............................',
+      '....H....t...H....n....H....',
+      '####H########H#########H####',
+      '....H........H.........H....',
+      '....H--------H---------H....',
+      '....H...t....H....t....H....',
+      '####H########H#########H####',
+      '....H........H.........H....',
+      '....H...n....H..s.t....H....',
+      '####H########H#########H####',
+      '....H........H.........H....',
+      '....H........H.........H....',
+      '.Pn.H...s...bH....s.t..HF...',
+      '============================',
+    ],
+  },
 ];
 
 /* ------------------------------ pixel art ------------------------------ */
@@ -144,6 +168,7 @@ const PAL = {
   L: '#946330', D: '#43291a', // kids' hair: (darker) light brown / dark brown
   f: '#c98a52', // freckles
   B: '#8a5a32', U: '#5e3c20', // bear: brown / dark brown shading
+  C: '#5c4326', S: '#cdd3dc', // Babu's brown hair / Gigi's silver stripe
 };
 
 // Penny, facing right. 16 x 12.
@@ -324,6 +349,45 @@ const NUT = [[
   '...LL...',
 ]];
 
+// Babu: grandpa, short curly brown hair (C), blue t-shirt (b). 12 x 15.
+const BABU = [[
+  '..C.CC.C....',
+  '.CCCCCCCC...',
+  '.CCCCCCCCC..',
+  '.CsssssssC..',
+  '..ssssssss..',
+  '..skssskss..',
+  '..ssssssss..',
+  '..ssshhsss..',
+  '...ssssss...',
+  '..bbbbbbbb..',
+  '.bbbbbbbbbb.',
+  '.bbbbbbbbbb.',
+  '.bsbbbbbbsb.',
+  '.bbbbbbbbbb.',
+  '.bb......bb.',
+]];
+
+// Gigi: grandma, chin-length black hair (k) with a silver stripe (S),
+// coral cardigan (h). 12 x 15.
+const GIGI = [[
+  '..kSkkkkk...',
+  '..kSkkkkkk..',
+  '..kSkkkkkk..',
+  '..kssssssk..',
+  '..kssssssk..',
+  '..kskssksk..',
+  '..kssssssk..',
+  '..ksshhssk..',
+  '..kssssssk..',
+  '...hhhhhh...',
+  '..hhhhhhhh..',
+  '.hhhhhhhhhh.',
+  '.hshhhhhhsh.',
+  '.hhhhhhhhhh.',
+  '.hh......hh.',
+]];
+
 // The family: three kids on the couch.
 //   left  = oldest (12), girl, light brown hair (L), shoulder length
 //   middle= 9-year-old, girl, dark brown hair (D), below the shoulders
@@ -388,6 +452,8 @@ function buildSprites() {
   SPR.treat  = buildSprite(TREAT[0], 1.6);
   SPR.nut    = buildSprite(NUT[0], 1.7);
   SPR.family = buildSprite(FAMILY[0], 2.0);
+  SPR.babu   = buildSprite(BABU[0], 2.1);
+  SPR.gigi   = buildSprite(GIGI[0], 2.1);
 }
 
 /* ------------------------------- audio --------------------------------- */
@@ -946,6 +1012,7 @@ function rainbowText(txt, x, y, size) {
 
 function drawBG() {
   if (LEVELS[level] && LEVELS[level].theme === 'lake') { drawLakeBG(); return; }
+  if (LEVELS[level] && LEVELS[level].theme === 'home') { drawHomeBG(); return; }
   // bright 90s pastel backdrop — keeps a mostly-black dog visible
   const g = cx.createLinearGradient(0, HUD, 0, H);
   g.addColorStop(0, '#fff3df'); g.addColorStop(0.55, '#ffe2ee'); g.addColorStop(1, '#e3f2ec');
@@ -1006,6 +1073,40 @@ function drawLakeBG() {
     cx.fillStyle = 'rgba(255,255,255,0.5)';
     cx.fillRect(sx, sy, 6, 1);
   }
+}
+
+// Cozy indoor room at Gigi & Babu's: warm wallpaper, framed pictures, a lamp,
+// a rug. Kept light so a black-and-tan dog still pops.
+function drawHomeBG() {
+  const g = cx.createLinearGradient(0, HUD, 0, H);
+  g.addColorStop(0, '#fcecd0'); g.addColorStop(1, '#f3dab4');
+  cx.fillStyle = g; cx.fillRect(0, HUD, W, H - HUD);
+  // wallpaper: soft vertical stripes
+  cx.fillStyle = 'rgba(208,158,108,0.10)';
+  for (let x = 0; x < W; x += 28) cx.fillRect(x, HUD, 14, H - HUD);
+  // a row of little diamonds high on the wall
+  cx.fillStyle = 'rgba(196,118,88,0.16)';
+  for (let x = 14; x < W; x += 56) { cx.save(); cx.translate(x, HUD + 22); cx.rotate(Math.PI / 4); cx.fillRect(-3, -3, 6, 6); cx.restore(); }
+  // framed pictures on the wall
+  const frame = (fx, fy, fw, fh) => {
+    cx.fillStyle = '#7a5230'; cx.fillRect(fx, fy, fw, fh);
+    cx.fillStyle = '#fff6e6'; cx.fillRect(fx + 3, fy + 3, fw - 6, fh - 6);
+  };
+  frame(74, HUD + 36, 48, 38); drawHeart(98, HUD + 57, 5);
+  frame(150, HUD + 44, 34, 30);
+  frame(W - 170, HUD + 34, 40, 50);
+  // a floor lamp in the right corner with a warm glow
+  cx.fillStyle = '#caa15a'; cx.fillRect(W - 46, HUD + 44, 6, 150);
+  cx.fillStyle = '#f2c879';
+  cx.beginPath(); cx.moveTo(W - 60, HUD + 46); cx.lineTo(W - 26, HUD + 46); cx.lineTo(W - 32, HUD + 22); cx.lineTo(W - 54, HUD + 22); cx.fill();
+  const glow = cx.createRadialGradient(W - 43, HUD + 40, 4, W - 43, HUD + 40, 54);
+  glow.addColorStop(0, 'rgba(255,240,200,0.55)'); glow.addColorStop(1, 'rgba(255,240,200,0)');
+  cx.fillStyle = glow; cx.beginPath(); cx.arc(W - 43, HUD + 40, 54, 0, 7); cx.fill();
+  // a patterned rug along the floor
+  cx.fillStyle = 'rgba(180,90,70,0.16)'; cx.fillRect(0, H - 64, W, 64);
+  cx.strokeStyle = 'rgba(120,60,45,0.22)'; cx.lineWidth = 2;
+  cx.strokeRect(40, H - 56, W - 80, 48);
+  for (let x = 56; x < W - 40; x += 24) { cx.beginPath(); cx.moveTo(x, H - 52); cx.lineTo(x + 10, H - 12); cx.stroke(); }
 }
 
 // A wooden dock jutting out over the lake on the right, where the family waits.
@@ -1136,8 +1237,14 @@ function drawTreats() {
 
 function drawFamily() {
   const img = SPR.family;
+  const baseY = HUD + family.y + T / 2;        // everyone's feet line
   const x = px(family.x - img.width / 2);
-  const y = px(HUD + family.y + T / 2 - img.height);
+  const y = px(baseY - img.height);
+  // Gigi & Babu's house: grandparents flank the three grandkids
+  if (LEVELS[level] && LEVELS[level].theme === 'home') {
+    cx.drawImage(SPR.babu, px(x - SPR.babu.width + 4), px(baseY - SPR.babu.height));
+    cx.drawImage(SPR.gigi, px(x + img.width - 4), px(baseY - SPR.gigi.height));
+  }
   cx.drawImage(img, x, y);
   if (exitOpen) {
     const g = Math.sin(stateT * 6) * 0.5 + 0.5;
