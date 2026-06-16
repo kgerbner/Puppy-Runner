@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v2.5';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v2.6';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -376,8 +376,8 @@ const GIGI = [[
   '..kSkkkkkk..',
   '..kssssssk..',
   '..kssssssk..',
-  '..kskssksk..',
-  '..kssssssk..',
+  '..kGkGGkGk..',
+  '..ksGssGsk..',
   '..ksshhssk..',
   '..kssssssk..',
   '...hhhhhh...',
