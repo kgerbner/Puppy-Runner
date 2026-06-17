@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v2.9';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v3.0';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -377,6 +377,25 @@ const NUT = [[
   '...LL...',
 ]];
 
+// Mackie: the family's black pit bull, sitting. 14 x 15.
+const MACKIE = [[
+  '..o.......o...',
+  '.oco.....oco..',
+  '.occo...occo..',
+  '.occccccccco..',
+  '.occccccccco..',
+  '.occwcccwcco..',
+  '.occccccccco..',
+  '.occckkkccco..',
+  '..occWWWcco...',
+  '..ocWWWWWco...',
+  '..occWWWcco...',
+  '..occcccco....',
+  '..occ.occo....',
+  '..oo..oo......',
+  '..............',
+]];
+
 // Honeypot: amber jar with a brown rim + label. Give it to the bear. 8 x 8.
 const HONEYPOT = [[
   '..CCCC..',
@@ -549,6 +568,7 @@ function buildSprites() {
   SPR.babu   = buildSprite(BABU[0], 2.1);
   SPR.gigi   = buildSprite(GIGI[0], 2.1);
   SPR.honey  = buildSprite(HONEYPOT[0], 1.8);
+  SPR.mackie = buildSprite(MACKIE[0], 1.7);
   SPR.emily  = buildSprite(EMILY[0], 1.9);
   SPR.amy    = buildSprite(AMY[0], 1.9);
   SPR.akid   = AKID.map(k => buildSprite(k[0], 1.9));
@@ -1246,39 +1266,56 @@ function drawArsenalBG() {
   // faint vertical pinstripes (red & white kit feel)
   cx.fillStyle = 'rgba(226,35,26,0.06)';
   for (let x = 0; x < W; x += 24) cx.fillRect(x, HUD, 12, H - HUD);
-  // Arsenal crest: a red shield with a white cannon
+
+  // small Arsenal crest (a red shield with a white cannon)
   const crest = (cxp, cyp, s) => {
     cx.fillStyle = '#e2231a';
     cx.beginPath();
     cx.moveTo(cxp - s, cyp - s); cx.lineTo(cxp + s, cyp - s);
     cx.lineTo(cxp + s, cyp); cx.lineTo(cxp, cyp + s * 1.4); cx.lineTo(cxp - s, cyp);
     cx.closePath(); cx.fill();
-    cx.fillStyle = '#fff';                               // cannon
-    cx.fillRect(cxp - s * 0.7, cyp - 3, s * 1.3, 5);     // barrel
-    cx.fillRect(cxp - s * 0.7, cyp + 2, 5, 4);           // carriage
+    cx.fillStyle = '#fff';
+    cx.fillRect(cxp - s * 0.7, cyp - 2, s * 1.3, 3);     // cannon barrel
     cx.fillStyle = '#13317a';
-    cx.fillRect(cxp - s * 0.7, cyp - s * 0.7, s * 1.4, 3); // blue band on top
+    cx.fillRect(cxp - s * 0.7, cyp - s * 0.7, s * 1.4, 2);
   };
-  crest(W / 2, HUD + 56, 30);
-  // posters / framed shirts on the wall
-  const poster = (fx, fy, fw, fh, col) => {
-    cx.fillStyle = '#caa'; cx.fillRect(fx - 2, fy - 2, fw + 4, fh + 4);
-    cx.fillStyle = col; cx.fillRect(fx, fy, fw, fh);
-    cx.fillStyle = '#fff'; cx.fillRect(fx, fy + fh * 0.2, fw, 4);   // white sleeves stripe
+  // small framed shirts, scarf, pennant + crest - all kept small now
+  const poster = (fx, fy, fw, fh) => {
+    cx.fillStyle = '#caa'; cx.fillRect(fx - 1, fy - 1, fw + 2, fh + 2);
+    cx.fillStyle = '#e2231a'; cx.fillRect(fx, fy, fw, fh);
+    cx.fillStyle = '#fff'; cx.fillRect(fx, fy + fh * 0.22, fw, 2);
   };
-  poster(70, HUD + 30, 40, 52, '#e2231a');
-  poster(W - 120, HUD + 28, 40, 52, '#e2231a');
-  // a scarf draped across the top-left
-  cx.fillStyle = '#e2231a'; cx.fillRect(150, HUD + 14, 90, 10);
-  cx.fillStyle = '#13317a'; cx.fillRect(150, HUD + 16, 90, 2);
-  cx.fillStyle = '#e2231a'; cx.fillRect(150, HUD + 24, 12, 26); cx.fillRect(228, HUD + 24, 12, 26);
-  cx.fillStyle = '#fff'; cx.fillRect(150, HUD + 44, 12, 4); cx.fillRect(228, HUD + 44, 12, 4);
-  // a triangular pennant on the right
+  poster(36, HUD + 26, 22, 30);     // small framed shirts flanking the banner
+  poster(W - 58, HUD + 26, 22, 30);
+  crest(102, HUD + 42, 11);
+  crest(W - 102, HUD + 42, 11);
+  // a small scarf on the left
+  cx.fillStyle = '#e2231a'; cx.fillRect(128, HUD + 24, 38, 5);
+  cx.fillStyle = '#13317a'; cx.fillRect(128, HUD + 26, 38, 2);
+  cx.fillStyle = '#e2231a'; cx.fillRect(128, HUD + 29, 6, 14); cx.fillRect(160, HUD + 29, 6, 14);
+  cx.fillStyle = '#fff'; cx.fillRect(128, HUD + 39, 6, 3); cx.fillRect(160, HUD + 39, 6, 3);
+  // a small pennant on the right
   cx.fillStyle = '#13317a';
-  cx.beginPath(); cx.moveTo(W - 230, HUD + 16); cx.lineTo(W - 170, HUD + 16); cx.lineTo(W - 230, HUD + 40); cx.fill();
-  cx.fillStyle = '#fff'; cx.font = 'bold 9px "Courier New", monospace'; cx.textAlign = 'left'; cx.textBaseline = 'middle';
-  cx.fillText('AFC', W - 224, HUD + 24);
-  // a soft floor rug at the bottom (red)
+  cx.beginPath(); cx.moveTo(W - 166, HUD + 24); cx.lineTo(W - 128, HUD + 24); cx.lineTo(W - 166, HUD + 40); cx.fill();
+  cx.fillStyle = '#fff'; cx.font = 'bold 7px "Courier New", monospace'; cx.textAlign = 'left'; cx.textBaseline = 'middle';
+  cx.fillText('AFC', W - 162, HUD + 29);
+
+  // GO GUNNERS! banner, centred across the top with bunting
+  for (let x = 6; x < W - 6; x += 26) {
+    cx.fillStyle = ['#e2231a', '#13317a', '#ffffff'][((x / 26) | 0) % 3];
+    cx.beginPath(); cx.moveTo(x, HUD + 4); cx.lineTo(x + 20, HUD + 4); cx.lineTo(x + 10, HUD + 16); cx.closePath(); cx.fill();
+  }
+  const bw = 300, bh = 34, bx = W / 2 - bw / 2, by = HUD + 22;
+  cx.fillStyle = '#13317a'; cx.fillRect(bx - 4, by - 4, bw + 8, bh + 8);   // navy border
+  cx.fillStyle = '#e2231a'; cx.fillRect(bx, by, bw, bh);                   // red banner
+  cx.fillStyle = '#ffffff'; cx.fillRect(bx, by, bw, 3); cx.fillRect(bx, by + bh - 3, bw, 3);
+  // little forked tails on the banner ends
+  cx.fillStyle = '#e2231a';
+  cx.beginPath(); cx.moveTo(bx - 4, by - 4); cx.lineTo(bx - 22, by + bh / 2); cx.lineTo(bx - 4, by + bh + 4); cx.fill();
+  cx.beginPath(); cx.moveTo(bx + bw + 4, by - 4); cx.lineTo(bx + bw + 22, by + bh / 2); cx.lineTo(bx + bw + 4, by + bh + 4); cx.fill();
+  chunkyText('GO GUNNERS!', W / 2, by + bh / 2 + 1, 19, '#ffffff', 'center', '#8e120c');
+
+  // a soft red floor rug at the bottom
   cx.fillStyle = 'rgba(226,35,26,0.12)'; cx.fillRect(0, H - 60, W, 60);
 }
 
@@ -1486,6 +1523,12 @@ function familyGlow(topY) {
   drawHeart(family.x + 28, HUD + family.y - 26 + Math.sin(stateT * 5) * 3, 5);
 }
 
+// Mackie, the family's black pit bull, sits just to the left of the family.
+function drawMackie(leftEdge, baseY) {
+  const m = SPR.mackie;
+  cx.drawImage(m, px(leftEdge - m.width - 3), px(baseY - m.height));
+}
+
 function drawFamily() {
   const baseY = HUD + family.y + T / 2;        // everyone's feet line
   // Theo's house: two moms, Theo, Lolo, Issa & Laz on the couch, all in Arsenal kits
@@ -1499,17 +1542,21 @@ function drawFamily() {
     cx.fillStyle = '#5a1f1f'; cx.fillRect(px(cx0), px(baseY), px(cw), 4);
     let dx = family.x - total / 2;
     for (const p of people) { cx.drawImage(p, px(dx), px(baseY - p.height)); dx += p.width + gap; }
+    drawMackie(px(cx0), baseY);
     familyGlow(px(baseY - 34));
     return;
   }
   const img = SPR.family;
   const x = px(family.x - img.width / 2), y = px(baseY - img.height);
+  let leftEdge = x;
   // Gigi & Babu's house: grandparents flank the three grandkids
   if (LEVELS[level] && LEVELS[level].theme === 'home') {
     cx.drawImage(SPR.babu, px(x - SPR.babu.width + 4), px(baseY - SPR.babu.height));
     cx.drawImage(SPR.gigi, px(x + img.width - 4), px(baseY - SPR.gigi.height));
+    leftEdge = x - SPR.babu.width + 4;
   }
   cx.drawImage(img, x, y);
+  drawMackie(leftEdge, baseY);
   familyGlow(y);
 }
 

@@ -68,8 +68,9 @@ House** (a cozy indoor room with the whole family — grandparents Gigi & Babu a
 the three grandkids), and the finale **Theo's House** — an Arsenal-decked bedroom
 with 4 squirrels, a bear, and honeypots, where Theo, his moms Emily & Amy, and
 Lolo, Issa & Laz wait in their Arsenal kits. Press **1–6** on the title screen to
-jump straight to any level. Finish all six to confirm what we already knew: Penny
-is a very good dog.
+jump straight to any level. **Mackie**, the family's black pit bull, waits beside
+the family at every finish line. Finish all six to confirm what we already knew:
+Penny is a very good dog.
 
 ### Made to be kid-friendly (ages ~7–12)
 
