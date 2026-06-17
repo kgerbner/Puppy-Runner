@@ -12,7 +12,7 @@ const m = src.match(/const LEVELS = \[[\s\S]*?\n\];/);
 if (!m) { console.error('could not find LEVELS in game.js'); process.exit(1); }
 const LEVELS = new Function(`${m[0].replace('const LEVELS =', 'return')}`)();
 
-const ROWS = 16, COLS = 28, LEGAL = new Set('#=H-tnsbPF.'.split(''));
+const ROWS = 16, COLS = 28, LEGAL = new Set('#=H-tnjsbPF.'.split(''));
 let anyFailed = false;
 
 for (const L of LEVELS) {
@@ -40,7 +40,7 @@ for (const L of LEVELS) {
       if (ch === 'P') { if (start) fail('multiple P'); start = [c, r]; }
       if (ch === 'F') { if (fam) fail('multiple F'); fam = [c, r]; }
       if (ch === 't') treats.push([c, r]);
-      if (ch === 'n') treats.push([c, r]); // nuts get the same reachability guarantees
+      if (ch === 'n' || ch === 'j') treats.push([c, r]); // nuts & honeypots get the same reachability guarantees
     }
   if (!start) fail('no P spawn');
   if (!fam) fail('no F family');

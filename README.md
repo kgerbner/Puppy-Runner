@@ -21,7 +21,7 @@ Open `index.html` in any modern browser. No build step, no dependencies.
 | ← → / A D | Run |
 | ↑ ↓ / W S | Climb ladders, drop from bars |
 | **Z** / **X** | Dig a hole to the left / right |
-| **SPACE** | Give a nut to the nearest squirrel |
+| **SPACE** | Give a nut to a squirrel — or a honeypot to the bear |
 | M | Mute |
 | R | Send Penny back to her start spot (costs a heart) |
 | Enter | Start |
@@ -43,12 +43,17 @@ Open `index.html` in any modern browser. No build step, no dependencies.
   prize (+50) and sits down to munch for a good while — completely harmless
   until it finishes eating. If no squirrel is close enough, Penny keeps the
   nut.
-- **The bear** (Level 4) — a Poconos black bear that lumbers after Penny and
+- **The bear** (Levels 4–6) — a black bear that lumbers after Penny and
   **climbs ladders** to follow her between floors. It's **lethal on contact like
-  the squirrels, but it can't be bribed** — nuts do nothing to a bear. It's slow
-  on the ground and climbs slowly too, so Penny can always outrun it; lose it on
-  the flats, or drop it in a hole (+200). It is the only thing in the game a nut
-  won't solve.
+  the squirrels, and nuts do nothing to it**. It's slow on the ground and climbs
+  slowly too, so Penny can always outrun it; lose it on the flats, or drop it in
+  a hole (+200).
+- **Honeypots** (Level 6) — the bear's weakness. Collect a honeypot (up to 2)
+  and press **SPACE** near the bear to give it one: for several seconds the bear
+  turns **friendly**, ignores Penny, and **chases the squirrels** instead,
+  scaring any it catches back to their nests (+100 each). SPACE is smart — it
+  feeds a nearby bear a honeypot if you have one, otherwise it bribes a squirrel
+  with a nut.
 - **Digging** — bricks (pink) can be dug through, Lode Runner style. Drop a
   squirrel into a hole to trap it (+75, +200 for the bear) — you can safely run
   across a trapped enemy's head. Holes refill after a few seconds, so don't get
@@ -57,12 +62,14 @@ Open `index.html` in any modern browser. No build step, no dependencies.
   couch (or the lakeside dock). Get there for the snuggle bonus (faster =
   bigger) and the next level.
 
-Five levels: **Backyard Basics**, **Squirrel Park**, **The Big Dig**, the
-Poconos-lakeside **Poconos Lake** (where the bear shows up), and the finale
-**Gigi & Babu's House** — a cozy indoor room with 3 squirrels and a bear, where
-the whole family (grandparents Gigi & Babu *and* the three grandkids) waits.
-Press **1–5** on the title screen to jump straight to any level. Finish all five
-to confirm what we already knew: Penny is a very good dog.
+Six levels: **Backyard Basics**, **Squirrel Park**, **The Big Dig**, the
+Poconos-lakeside **Poconos Lake** (where the bear shows up), **Gigi & Babu's
+House** (a cozy indoor room with the whole family — grandparents Gigi & Babu and
+the three grandkids), and the finale **Theo's House** — an Arsenal-decked bedroom
+with 4 squirrels, a bear, and honeypots, where Theo, his moms Emily & Amy, and
+Lolo, Issa & Laz wait in their Arsenal kits. Press **1–6** on the title screen to
+jump straight to any level. Finish all six to confirm what we already knew: Penny
+is a very good dog.
 
 ### Made to be kid-friendly (ages ~7–12)
 
