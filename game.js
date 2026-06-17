@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v2.6';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v2.7';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -1092,9 +1092,50 @@ function drawHomeBG() {
     cx.fillStyle = '#7a5230'; cx.fillRect(fx, fy, fw, fh);
     cx.fillStyle = '#fff6e6'; cx.fillRect(fx + 3, fy + 3, fw - 6, fh - 6);
   };
-  frame(74, HUD + 36, 48, 38); drawHeart(98, HUD + 57, 5);
-  frame(150, HUD + 44, 34, 30);
-  frame(W - 170, HUD + 34, 40, 50);
+  frame(74, HUD + 38, 46, 36); drawHeart(97, HUD + 58, 5);
+  frame(W - 168, HUD + 34, 40, 50);
+
+  // books, books, books - Gigi & Babu love reading
+  const bookCols = ['#c2452f', '#2f7a8c', '#d59a2a', '#3f6f4a', '#7e5bef', '#b03a8c', '#2f5f9e', '#e07a2a'];
+  const shelfOfBooks = (sx, sy, sw, seed) => {
+    cx.fillStyle = '#6b4630'; cx.fillRect(sx, sy + 24, sw, 4);   // the shelf board
+    let x = sx + 1, i = seed;
+    while (x < sx + sw - 5) {
+      const bw = 5 + ((i * 7) % 4), bh = 17 + ((i * 11) % 7);
+      cx.fillStyle = bookCols[i % bookCols.length];
+      if (i % 6 === 5) {                                          // an occasional leaning book
+        cx.save(); cx.translate(x + bw, sy + 24); cx.rotate(-0.18);
+        cx.fillRect(0, -bh, bw, bh); cx.restore();
+      } else {
+        cx.fillRect(x, sy + 24 - bh, bw, bh);
+        cx.fillStyle = 'rgba(255,255,255,0.4)'; cx.fillRect(x, sy + 24 - bh + 3, bw, 1); // title band
+      }
+      x += bw + 1; i++;
+    }
+  };
+  const bookcase = (bx, by, bw, shelves) => {
+    cx.fillStyle = '#5a3a26';
+    cx.fillRect(bx, by, bw, 4);                                   // top
+    cx.fillRect(bx, by, 4, shelves * 30 + 4);                     // left wall
+    cx.fillRect(bx + bw - 4, by, 4, shelves * 30 + 4);            // right wall
+    for (let s = 0; s < shelves; s++) shelfOfBooks(bx + 4, by + 4 + s * 30, bw - 8, s * 3 + 1);
+  };
+  bookcase(292, HUD + 6, 184, 2);                                 // big bookcase, centre wall
+  shelfOfBooks(150, HUD + 44, 96, 2);                             // a single wall shelf on the left
+
+  // a little stack of well-loved books on the floor by the family
+  const bookStack = (sx, baseY) => {
+    let y = baseY;
+    for (let i = 0; i < 4; i++) {
+      const w = 22 - i * 2;
+      cx.fillStyle = bookCols[(i * 3 + 1) % bookCols.length];
+      cx.fillRect(sx - w / 2, y - 5, w, 5);
+      cx.fillStyle = 'rgba(0,0,0,0.12)'; cx.fillRect(sx - w / 2, y - 1, w, 1);
+      y -= 6;
+    }
+  };
+  bookStack(250, H - 30);
+
   // a floor lamp in the right corner with a warm glow
   cx.fillStyle = '#caa15a'; cx.fillRect(W - 46, HUD + 44, 6, 150);
   cx.fillStyle = '#f2c879';
