@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v3.0';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v3.1';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -377,15 +377,15 @@ const NUT = [[
   '...LL...',
 ]];
 
-// Mackie: the family's black pit bull, sitting. 14 x 15.
+// Mackie: the family's black pit bull (she), sitting. 14 x 15.
 const MACKIE = [[
   '..o.......o...',
   '.oco.....oco..',
   '.occo...occo..',
   '.occccccccco..',
   '.occccccccco..',
-  '.occwcccwcco..',
-  '.occccccccco..',
+  '.occWcccWcco..',
+  '.occckkkccco..',
   '.occckkkccco..',
   '..occWWWcco...',
   '..ocWWWWWco...',
@@ -1314,6 +1314,37 @@ function drawArsenalBG() {
   cx.beginPath(); cx.moveTo(bx - 4, by - 4); cx.lineTo(bx - 22, by + bh / 2); cx.lineTo(bx - 4, by + bh + 4); cx.fill();
   cx.beginPath(); cx.moveTo(bx + bw + 4, by - 4); cx.lineTo(bx + bw + 22, by + bh / 2); cx.lineTo(bx + bw + 4, by + bh + 4); cx.fill();
   chunkyText('GO GUNNERS!', W / 2, by + bh / 2 + 1, 19, '#ffffff', 'center', '#8e120c');
+
+  // small Arsenal decorations on each floor, placed in symmetric mirrored pairs
+  const football = (fx, fy) => {
+    cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(fx, fy, 7, 0, 7); cx.fill();
+    cx.strokeStyle = '#13317a'; cx.lineWidth = 1; cx.beginPath(); cx.arc(fx, fy, 7, 0, 7); cx.stroke();
+    cx.fillStyle = '#13317a';
+    cx.beginPath(); cx.moveTo(fx, fy - 3); cx.lineTo(fx + 3, fy); cx.lineTo(fx, fy + 3); cx.lineTo(fx - 3, fy); cx.fill();
+    cx.fillRect(fx - 6, fy - 1, 2, 2); cx.fillRect(fx + 4, fy - 1, 2, 2);
+  };
+  const miniScarf = (fx, fy) => {
+    cx.fillStyle = '#e2231a'; cx.fillRect(fx - 11, fy, 22, 5);
+    cx.fillStyle = '#13317a'; cx.fillRect(fx - 11, fy + 2, 22, 1);
+    cx.fillStyle = '#e2231a'; cx.fillRect(fx - 11, fy + 5, 4, 9); cx.fillRect(fx + 7, fy + 5, 4, 9);
+    cx.fillStyle = '#fff'; cx.fillRect(fx - 11, fy + 11, 4, 3); cx.fillRect(fx + 7, fy + 11, 4, 3);
+  };
+  const miniPennant = (fx, fy, dir) => {
+    cx.fillStyle = '#13317a'; cx.fillRect(fx, fy, 1, 18);                 // pole
+    cx.fillStyle = '#e2231a';
+    cx.beginPath(); cx.moveTo(fx + dir, fy + 1); cx.lineTo(fx + dir, fy + 13); cx.lineTo(fx + dir * 16, fy + 4); cx.fill();
+    cx.fillStyle = '#fff'; cx.fillRect(fx + dir * 4, fy + 5, 4, 1);
+  };
+  // mirrored about the centre (x = W/2) so each floor is symmetric
+  // band between the r4 and r8 floors
+  football(140, HUD + 132); football(W - 140, HUD + 132);
+  miniPennant(232, HUD + 124, 1); miniPennant(W - 232, HUD + 124, -1);
+  // band between the r8 and r11 floors
+  miniScarf(140, HUD + 222); miniScarf(W - 140, HUD + 222);
+  football(232, HUD + 230); football(W - 232, HUD + 230);
+  // band between the r11 and r14 floors
+  miniPennant(140, HUD + 292, 1); miniPennant(W - 140, HUD + 292, -1);
+  miniScarf(232, HUD + 296); miniScarf(W - 232, HUD + 296);
 
   // a soft red floor rug at the bottom
   cx.fillStyle = 'rgba(226,35,26,0.12)'; cx.fillRect(0, H - 60, W, 60);
