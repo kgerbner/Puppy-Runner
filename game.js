@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v2.7';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v2.8';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -1087,15 +1087,7 @@ function drawHomeBG() {
   // a row of little diamonds high on the wall
   cx.fillStyle = 'rgba(196,118,88,0.16)';
   for (let x = 14; x < W; x += 56) { cx.save(); cx.translate(x, HUD + 22); cx.rotate(Math.PI / 4); cx.fillRect(-3, -3, 6, 6); cx.restore(); }
-  // framed pictures on the wall
-  const frame = (fx, fy, fw, fh) => {
-    cx.fillStyle = '#7a5230'; cx.fillRect(fx, fy, fw, fh);
-    cx.fillStyle = '#fff6e6'; cx.fillRect(fx + 3, fy + 3, fw - 6, fh - 6);
-  };
-  frame(74, HUD + 38, 46, 36); drawHeart(97, HUD + 58, 5);
-  frame(W - 168, HUD + 34, 40, 50);
-
-  // books, books, books - Gigi & Babu love reading
+  // one long bookshelf running the whole width of the room - they love reading
   const bookCols = ['#c2452f', '#2f7a8c', '#d59a2a', '#3f6f4a', '#7e5bef', '#b03a8c', '#2f5f9e', '#e07a2a'];
   const shelfOfBooks = (sx, sy, sw, seed) => {
     cx.fillStyle = '#6b4630'; cx.fillRect(sx, sy + 24, sw, 4);   // the shelf board
@@ -1113,15 +1105,7 @@ function drawHomeBG() {
       x += bw + 1; i++;
     }
   };
-  const bookcase = (bx, by, bw, shelves) => {
-    cx.fillStyle = '#5a3a26';
-    cx.fillRect(bx, by, bw, 4);                                   // top
-    cx.fillRect(bx, by, 4, shelves * 30 + 4);                     // left wall
-    cx.fillRect(bx + bw - 4, by, 4, shelves * 30 + 4);            // right wall
-    for (let s = 0; s < shelves; s++) shelfOfBooks(bx + 4, by + 4 + s * 30, bw - 8, s * 3 + 1);
-  };
-  bookcase(292, HUD + 6, 184, 2);                                 // big bookcase, centre wall
-  shelfOfBooks(150, HUD + 44, 96, 2);                             // a single wall shelf on the left
+  shelfOfBooks(0, HUD + 18, W, 1);                                // full-width shelf
 
   // a little stack of well-loved books on the floor by the family
   const bookStack = (sx, baseY) => {
