@@ -68,11 +68,11 @@ House** (a cozy indoor room with the grandparents and three grandkids), **Theo's
 House** — an Arsenal-decked bedroom with 4 squirrels, a bear and honeypots, where
 Theo, his moms Emily & Amy, and Lolo, Issa & Laz wait in their kits — and the
 finale **Harper & Isabel's House**, a Portugal-themed home (Portuguese flag,
-azulejo walls, tins of sardines) with 5 squirrels and a bear, where Harper,
-Isabel and their parents Angie & Jon are waiting. Press **1–7** on the title
+azulejo walls, sardines on the wall) with 5 squirrels and a bear, where Harper,
+Isabel and their parents Erzsi & Jon are waiting. Press **1–7** on the title
 screen to jump straight to any level. **Mackie**, the family's black pit bull
-(she), waits beside the family at every finish line. Finish all seven to confirm
-what we already knew: Penny is a very good dog.
+(she), waits with Theo's family in Level 6. Finish all seven to confirm what we
+already knew: Penny is a very good dog.
 
 ### Made to be kid-friendly (ages ~7–12)
 

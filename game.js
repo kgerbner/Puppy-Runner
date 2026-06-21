@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v3.2';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v3.3';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -202,7 +202,7 @@ const LEVELS = [
       '####H########H#########H####',
       '....H........H.........H....',
       '....H........H.........H....',
-      '.P..H...s.t..HF...b.s.jH....',
+      '.Pn.H...s.t..HF...b.s.jH....',
       '============================',
     ],
   },
@@ -221,7 +221,7 @@ const PAL = {
   C: '#5c4326', S: '#cdd3dc', // Babu's brown hair / Gigi's silver stripe
   R: '#e2231a', W: '#f5f5f5', // Arsenal kit: red / white
   A: '#e8a83a', Y: '#e3c66a', // honeypot amber / blond hair
-  q: '#3f9b5a', // green (Angie's top)
+  q: '#3f9b5a', Z: '#bd9a45', // green (Erzsi's top) / Erzsi's darker blond hair
 };
 
 // Penny, facing right. 16 x 12.
@@ -488,16 +488,16 @@ const AKID = ['L', 'D', 'k', 'C'].map(hair => [[
 ].map(row => row.replace(/H/g, hair))]);
 
 // Harper & Isabel's family (Portugal). Adults 12 x 15, kids 10 x 13.
-// Angie: mom, shoulder-length blond (Y), green top.
-const ANGIE = [[
-  '...YYYYYY...',
-  '..YYYYYYYY..',
-  '..YYYYYYYY..',
-  '..YssssssY..',
-  '..YskssksY..',
-  '..YssssssY..',
-  '..YsshhssY..',
-  '..YssssssY..',
+// Erzsi: mom, shoulder-length dark-blond (Z), green top.
+const ERZSI = [[
+  '...ZZZZZZ...',
+  '..ZZZZZZZZ..',
+  '..ZZZZZZZZ..',
+  '..ZssssssZ..',
+  '..ZskssksZ..',
+  '..ZssssssZ..',
+  '..ZsshhssZ..',
+  '..ZssssssZ..',
   '..qqqqqqqq..',
   '.qqqqqqqqqq.',
   '.qqqqqqqqqq.',
@@ -667,7 +667,7 @@ function buildSprites() {
   SPR.emily  = buildSprite(EMILY[0], 1.9);
   SPR.amy    = buildSprite(AMY[0], 1.9);
   SPR.akid   = AKID.map(k => buildSprite(k[0], 1.9));
-  SPR.angie  = buildSprite(ANGIE[0], 1.9);
+  SPR.erzsi  = buildSprite(ERZSI[0], 1.9);
   SPR.jon    = buildSprite(JON[0], 1.9);
   SPR.harper = buildSprite(HARPER[0], 1.9);
   SPR.isabel = buildSprite(ISABEL[0], 1.9);
@@ -1367,38 +1367,40 @@ function drawPortugalBG() {
   for (let x = 24; x < W; x += 48) for (let y = HUD + 24; y < H; y += 48) {
     cx.save(); cx.translate(x, y); cx.rotate(Math.PI / 4); cx.fillRect(-4, -4, 8, 8); cx.restore();
   }
-  // the Portuguese flag
-  const flag = (fx, fy, fw) => {
-    const fh = Math.round(fw * 0.66);
-    cx.fillStyle = '#7a5a36'; cx.fillRect(fx - 3, fy - 2, 2, fh + 10);   // flagpole
-    cx.fillStyle = '#046a38'; cx.fillRect(fx, fy, Math.round(fw * 0.4), fh);          // green hoist
-    cx.fillStyle = '#da291c'; cx.fillRect(fx + Math.round(fw * 0.4), fy, fw - Math.round(fw * 0.4), fh); // red fly
-    const ox = fx + fw * 0.4, oy = fy + fh / 2, rr = fh * 0.3;            // armillary sphere
+  // the Portuguese flag - drawn symmetrically (green/red halves, centred sphere)
+  const flag = (cxr, fy, fw) => {
+    const fh = Math.round(fw * 0.64), fx = cxr - fw / 2;
+    cx.fillStyle = '#046a38'; cx.fillRect(fx, fy, fw / 2, fh);          // green left half
+    cx.fillStyle = '#da291c'; cx.fillRect(cxr, fy, fw / 2, fh);         // red right half
+    const oy = fy + fh / 2, rr = fh * 0.3;                              // armillary sphere, centred
     cx.strokeStyle = '#ffd64e'; cx.lineWidth = 2;
-    cx.beginPath(); cx.arc(ox, oy, rr, 0, 7); cx.stroke();
-    cx.beginPath(); cx.ellipse(ox, oy, rr * 0.5, rr, 0, 0, 7); cx.stroke();
-    cx.beginPath(); cx.moveTo(ox - rr, oy); cx.lineTo(ox + rr, oy); cx.stroke();
-    cx.fillStyle = '#fff'; cx.fillRect(ox - 2, oy - 3, 5, 7);            // little shield
-    cx.fillStyle = '#da291c'; cx.fillRect(ox - 1, oy - 2, 3, 5);
+    cx.beginPath(); cx.arc(cxr, oy, rr, 0, 7); cx.stroke();
+    cx.beginPath(); cx.ellipse(cxr, oy, rr * 0.5, rr, 0, 0, 7); cx.stroke();
+    cx.beginPath(); cx.moveTo(cxr - rr, oy); cx.lineTo(cxr + rr, oy); cx.stroke();
+    cx.fillStyle = '#fff'; cx.fillRect(cxr - 2, oy - 4, 5, 8);          // little shield
+    cx.fillStyle = '#da291c'; cx.fillRect(cxr - 1, oy - 3, 3, 6);
   };
-  // a tin of sardines
-  const tin = (tx, ty) => {
-    cx.fillStyle = '#8fa2b0'; cx.fillRect(tx, ty, 30, 15);              // tin body
-    cx.fillStyle = '#c6d4de'; cx.fillRect(tx, ty, 30, 3);              // lid shine
-    cx.fillStyle = '#1f6fb0'; cx.fillRect(tx + 2, ty + 10, 26, 3);     // label band
-    cx.fillStyle = '#d8b24a';                                          // two sardines
-    cx.beginPath(); cx.ellipse(tx + 9, ty + 6, 6, 2.4, 0, 0, 7); cx.fill();
-    cx.beginPath(); cx.ellipse(tx + 21, ty + 6, 6, 2.4, 0, 0, 7); cx.fill();
-    cx.fillStyle = '#a07e2c'; cx.fillRect(tx + 2, ty + 5, 2, 2); cx.fillRect(tx + 26, ty + 5, 2, 2); // tails
-    cx.fillStyle = '#15151b'; cx.fillRect(tx + 13, ty + 5, 1, 1); cx.fillRect(tx + 16, ty + 5, 1, 1); // eyes
+  // a single sardine drawn on the wall (dir = which way it faces)
+  const sardine = (fx, fy, dir) => {
+    cx.fillStyle = '#9fb6c4';
+    cx.beginPath(); cx.ellipse(fx, fy, 12, 4, 0, 0, 7); cx.fill();      // body
+    cx.fillStyle = '#c6d6df';
+    cx.beginPath(); cx.ellipse(fx, fy + 1, 9, 2, 0, 0, 7); cx.fill();   // belly highlight
+    cx.fillStyle = '#7d96a6';                                          // tail (back end)
+    cx.beginPath(); cx.moveTo(fx - dir * 11, fy); cx.lineTo(fx - dir * 18, fy - 4); cx.lineTo(fx - dir * 18, fy + 4); cx.fill();
+    cx.fillStyle = '#15151b';                                          // eye (head end)
+    cx.beginPath(); cx.arc(fx + dir * 8, fy - 1, 1.3, 0, 7); cx.fill();
+    cx.strokeStyle = 'rgba(70,100,120,0.45)'; cx.lineWidth = 1;        // gill lines
+    cx.beginPath(); cx.moveTo(fx - 1, fy - 3); cx.lineTo(fx - 1, fy + 3); cx.stroke();
+    cx.beginPath(); cx.moveTo(fx + 3, fy - 3); cx.lineTo(fx + 3, fy + 3); cx.stroke();
   };
-  flag(W / 2 - 52, HUD + 16, 104);                                     // flag centred up top
-  // sardine tins in symmetric mirrored pairs (small) on the top + each floor band
-  const tinPair = (x, y) => { tin(x, y); tin(W - x - 30, y); };
-  tinPair(58, HUD + 28);
-  tinPair(120, HUD + 128); tinPair(232, HUD + 124);
-  tinPair(120, HUD + 224);
-  tinPair(120, HUD + 294); tinPair(232, HUD + 290);
+  flag(W / 2, HUD + 16, 104);                                          // flag centred up top
+  // sardines on the wall in symmetric mirrored pairs (facing inward)
+  const sardinePair = (x, y) => { sardine(x, y, 1); sardine(W - x, y, -1); };
+  sardinePair(70, HUD + 34);
+  sardinePair(132, HUD + 132); sardinePair(236, HUD + 128);
+  sardinePair(132, HUD + 230);
+  sardinePair(132, HUD + 298); sardinePair(236, HUD + 296);
   // a soft green floor accent
   cx.fillStyle = 'rgba(4,106,56,0.10)'; cx.fillRect(0, H - 60, W, 60);
 }
@@ -1708,9 +1710,9 @@ function drawMackie(leftEdge, baseY) {
   cx.drawImage(m, px(leftEdge - m.width - 3), px(baseY - m.height));
 }
 
-// Draw a row of people sitting on a couch, centred on family.x, with Mackie
-// beside them. Used for the "everyone on the couch" finish levels.
-function drawCouchGroup(people, top, mid, base) {
+// Draw a row of people sitting on a couch, centred on family.x. Mackie (the
+// pit bull) only appears at her own home - Theo's house (Level 6).
+function drawCouchGroup(people, top, mid, base, withMackie) {
   const baseY = HUD + family.y + T / 2;
   const gap = -1;
   const total = people.reduce((a, p) => a + p.width + gap, -gap);
@@ -1720,7 +1722,7 @@ function drawCouchGroup(people, top, mid, base) {
   cx.fillStyle = base; cx.fillRect(px(cx0), px(baseY), px(cw), 4);
   let dx = family.x - total / 2;
   for (const p of people) { cx.drawImage(p, px(dx), px(baseY - p.height)); dx += p.width + gap; }
-  drawMackie(px(cx0), baseY);
+  if (withMackie) drawMackie(px(cx0), baseY);
   familyGlow(px(baseY - 34));
 }
 
@@ -1729,26 +1731,23 @@ function drawFamily() {
   // Theo's house: two moms, Theo, Lolo, Issa & Laz on the couch, all in Arsenal kits
   if (LEVELS[level] && LEVELS[level].theme === 'arsenal') {
     drawCouchGroup([SPR.emily, SPR.akid[0], SPR.akid[3], SPR.akid[1], SPR.akid[2], SPR.amy],
-      '#9e3a3a', '#7e2b2b', '#5a1f1f');
+      '#9e3a3a', '#7e2b2b', '#5a1f1f', true);   // Mackie lives here
     return;
   }
-  // Harper & Isabel's house: parents Jon & Angie flank the two kids
+  // Harper & Isabel's house: parents Jon & Erzsi flank the two kids
   if (LEVELS[level] && LEVELS[level].theme === 'portugal') {
-    drawCouchGroup([SPR.jon, SPR.harper, SPR.isabel, SPR.angie],
-      '#b9854f', '#9c6c3c', '#6f4a26');
+    drawCouchGroup([SPR.jon, SPR.harper, SPR.isabel, SPR.erzsi],
+      '#b9854f', '#9c6c3c', '#6f4a26', false);
     return;
   }
   const img = SPR.family;
   const x = px(family.x - img.width / 2), y = px(baseY - img.height);
-  let leftEdge = x;
   // Gigi & Babu's house: grandparents flank the three grandkids
   if (LEVELS[level] && LEVELS[level].theme === 'home') {
     cx.drawImage(SPR.babu, px(x - SPR.babu.width + 4), px(baseY - SPR.babu.height));
     cx.drawImage(SPR.gigi, px(x + img.width - 4), px(baseY - SPR.gigi.height));
-    leftEdge = x - SPR.babu.width + 4;
   }
   cx.drawImage(img, x, y);
-  drawMackie(leftEdge, baseY);
   familyGlow(y);
 }
 
