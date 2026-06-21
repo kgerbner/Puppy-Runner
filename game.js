@@ -7,7 +7,7 @@
 'use strict';
 
 /* ----------------------------- constants ------------------------------ */
-const VERSION = 'v3.3';                      // shown on title + HUD; bump on balance changes
+const VERSION = 'v3.4';                      // shown on title + HUD; bump on balance changes
 const COLS = 28, ROWS = 16, T = 24;          // grid + tile size (px)
 const HUD = 48;                              // hud bar height (px)
 const W = COLS * T, H = ROWS * T + HUD;      // canvas size
@@ -198,11 +198,11 @@ const LEVELS = [
       '....H..s.t...H..t.s....H....',
       '####H########H#########H####',
       '....H........H.........H....',
-      '....H..s.t...H..t.n....H....',
+      '....H..t.t...H..t.s.n..H....',
       '####H########H#########H####',
       '....H........H.........H....',
       '....H........H.........H....',
-      '.Pn.H...s.t..HF...b.s.jH....',
+      '.Pn.Hj..s.t..HF...b.s.jH....',
       '============================',
     ],
   },
